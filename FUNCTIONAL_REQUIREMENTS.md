@@ -18,14 +18,8 @@
 
 ### Alternate Git views
 
-- The UI must switch the right pane between:
-  - `git status`
-  - `git diff`
-  - `git branch`
-  - `git log`
-- `git log` must support:
-  - no additional options
-  - `--oneline`
+- The UI must switch the right pane between `git status`, `git diff`, `git branch`, and `git log`.
+- `git log` must support no additional options and `--oneline`.
 
 ### Command execution
 
