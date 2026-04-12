@@ -55,3 +55,4 @@
 |----|-------------|-------------|-------------|----------|--------|
 | RI-001 | step_05 | Documented the `.github` directory in the main project docs. | README.md | Low | done |
 | RI-002 | step_13 | Removed the markdown list-indentation violation in the requirements doc. | FUNCTIONAL_REQUIREMENTS.md | Low | done |
+| RI-003 | step_02 | Updated stale documentation that claimed the repo had no committed test suite. | README.md, ARCHITECTURE.md, FUNCTIONAL_REQUIREMENTS.md, .github/copilot-instructions.md | Medium | done |
