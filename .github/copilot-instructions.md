@@ -9,7 +9,7 @@
 - Run the built CLI with `npm run start`.
 - Type-check the project with `npm run typecheck`.
 
-There is not a committed test suite or lint configuration yet, so do not invent `npm test` or `npm run lint`. There is also no single-test command until a test runner is added.
+Committed test files now exist under `test/`, but there is still no configured test runner, `npm test` script, or lint configuration yet. Do not invent those commands until the supporting tooling is added.
 
 ## High-level architecture
 

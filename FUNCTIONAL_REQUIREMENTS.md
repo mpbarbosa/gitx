@@ -42,7 +42,7 @@
 
 ## Current Gaps
 
-- There is no committed automated test suite yet.
+- Committed automated test files now exist under `test/`, but there is still no configured test runner or `npm test` script.
 - There is no committed lint configuration yet.
 - Workflow automation must treat those gaps as intentional current state rather than missing scripts to invent.
 

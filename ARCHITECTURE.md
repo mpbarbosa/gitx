@@ -44,7 +44,7 @@ The CLI bootstrap lives in `src/index.tsx`, which renders `App` from `src/app.ts
 - `vendor/pajussara_tui_comp/` is generated and should not be hand-edited.
 - `src/` contains application-specific logic and should remain the primary edit surface.
 - The selected directory is the execution context for all Git commands.
-- The project currently has no committed test suite or lint configuration.
+- The project has committed test files under `test/`, but it still has no configured test runner, `npm test` script, or lint configuration.
 
 ## Build and Validation Surface
 

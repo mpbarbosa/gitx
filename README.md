@@ -27,4 +27,4 @@ This repository now includes `.workflow-config.yaml` plus the root documentation
 
 Repository automation metadata and project-specific Copilot guidance live under `.github/`.
 
-The workflow configuration intentionally disables test and lint execution stages because this repository does not yet include a committed automated test suite or lint configuration. Build and type-check stages remain available through the existing npm scripts.
+The workflow configuration intentionally disables test and lint execution stages because the repository still lacks a configured test runner, `npm test` script, and lint setup, even though committed test files now exist under `test/`. Build and type-check stages remain available through the existing npm scripts.
