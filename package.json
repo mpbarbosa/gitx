@@ -1,0 +1,47 @@
+{
+  "name": "gitx",
+  "version": "1.0.1",
+  "description": "TypeScript Ink TUI App for git commands with MCP",
+  "main": "./dist/index.js",
+  "scripts": {
+    "sync:pajussara": "node scripts/sync-pajussara-cdn.mjs",
+    "dev": "npm run sync:pajussara && tsx src/index.tsx",
+    "build": "npm run sync:pajussara && tsc -p tsconfig.json",
+    "start": "npm run sync:pajussara && node dist/index.js",
+    "typecheck": "npm run sync:pajussara && tsc --noEmit -p tsconfig.json"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mpbarbosa/gitx.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/mpbarbosa/gitx/issues"
+  },
+  "homepage": "https://github.com/mpbarbosa/gitx#readme",
+  "dependencies": {
+    "ink": "^7.0.0",
+    "react": "^19.2.5"
+  },
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "@types/react": "^19.2.14",
+    "tsx": "^4.21.0",
+    "typescript": "^6.0.2"
+  },
+  "bin": {
+    "gitx": "./dist/index.js"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "imports": {
+    "#pajussara_tui_comp/DirectoryTextBrowser": "./vendor/pajussara_tui_comp/dist/src/DirectoryTextBrowser.js",
+    "#pajussara_tui_comp/DirectoryTextBrowserWithStatusBar": "./vendor/pajussara_tui_comp/dist/src/DirectoryTextBrowserWithStatusBar.js",
+    "#pajussara_tui_comp/StatusBar": "./vendor/pajussara_tui_comp/dist/src/StatusBar.js",
+    "#pajussara_tui_comp/TextListPanel": "./vendor/pajussara_tui_comp/dist/src/TextListPanel.js"
+  }
+}

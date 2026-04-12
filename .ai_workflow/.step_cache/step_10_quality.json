@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "fileScores": {
+    "src/pajussara-cdn.ts": {
+      "score": 100,
+      "issueCount": 0,
+      "lastAnalyzed": "2026-04-12T21:06:17.139Z"
+    },
+    "src/app.tsx": {
+      "score": 100,
+      "issueCount": 0,
+      "lastAnalyzed": "2026-04-12T21:06:17.139Z"
+    },
+    "src/index.tsx": {
+      "score": 100,
+      "issueCount": 0,
+      "lastAnalyzed": "2026-04-12T21:06:17.139Z"
+    },
+    "scripts/sync-pajussara-cdn.mjs": {
+      "score": 100,
+      "issueCount": 0,
+      "lastAnalyzed": "2026-04-12T21:06:17.139Z"
+    },
+    "package-lock.json": {
+      "score": 100,
+      "issueCount": 0,
+      "lastAnalyzed": "2026-04-12T21:06:17.139Z"
+    }
+  }
+}

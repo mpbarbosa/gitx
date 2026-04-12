@@ -70,6 +70,9 @@ web_modules/
 .env.*
 !.env.example
 
+# ai_workflow.js artifacts
+.ai_workflow/
+
 # parcel-bundler cache (https://parceljs.org/)
 .cache
 .parcel-cache
@@ -81,6 +84,7 @@ out
 # Nuxt.js build / generate output
 .nuxt
 dist
+vendor/pajussara_tui_comp
 
 # Gatsby files
 .cache/
