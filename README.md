@@ -25,4 +25,6 @@ npm run typecheck
 
 This repository now includes `.workflow-config.yaml` plus the root documentation files `ARCHITECTURE.md`, `FUNCTIONAL_REQUIREMENTS.md`, and `CHANGELOG.md` so `ai_workflow.js` has the project metadata and documentation context it expects.
 
+Repository automation metadata and project-specific Copilot guidance live under `.github/`.
+
 The workflow configuration intentionally disables test and lint execution stages because this repository does not yet include a committed automated test suite or lint configuration. Build and type-check stages remain available through the existing npm scripts.
