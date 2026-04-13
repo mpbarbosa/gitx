@@ -1,6 +1,6 @@
 {
   "name": "gitx",
-  "version": "1.1.8",
+  "version": "1.1.9",
   "description": "TypeScript Ink TUI App for git commands with MCP",
   "main": "./dist/index.js",
   "scripts": {
