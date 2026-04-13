@@ -5,7 +5,7 @@ project:
   name: "gitx"
   type: "typescript-application"
   kind: "nodejs_automation"
-  version: "1.1.5"
+  version: "1.1.6"
   description: "Ink-based TypeScript terminal UI for browsing local Git repositories and running folder-scoped Git commands"
 
 tech_stack:
@@ -113,7 +113,7 @@ workflow:
     - id: step_02
       name: "Consistency Analysis"
       file: "step_02.js"
-      description: "Check consistency between documentation, package scripts, and source structure"
+      description: "Check consistency across the in-scope markdown documentation batch and treat package, script, or source parity as inconclusive unless those files are explicitly in context"
       phase: 1
       enabled: true
       can_parallelize: true

@@ -24,7 +24,7 @@ npm run start
 npm run typecheck
 ```
 
-`pajussara_tui_comp` is pulled from the jsDelivr GitHub CDN into a generated `vendor/` directory when these commands run. The current app uses its `DirectoryTextBrowserWithStatusBar` component as the base two-pane TUI, roots the browser at `/home/mpb/Documents/GitHub`, shows `git status --short --branch` in the right pane by default, lets you switch that pane to `git diff` with `[d]` or `git branch` with `[b]`, and opens a second-level `git log` options bar with `[l]` before running `git log` or `git log --oneline`.
+`pajussara_tui_comp` is pulled from the jsDelivr GitHub CDN into a generated `vendor/` directory when these commands run. The current app uses its `DirectoryTextBrowserWithStatusBar` component as the base two-pane TUI, roots the browser at `/home/mpb/Documents/GitHub`, shows `git status --short --branch` in the right pane by default, lets you switch that pane to `git diff` with `[d]` or `git branch` with `[b]`, opens a second-level `git log` options bar with `[l]` before running `git log` or `git log --oneline`, and runs `git pull` with `[p]` or `git push` with `[x]` against the selected folder.
 
 ## Workflow automation
 
