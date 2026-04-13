@@ -4,7 +4,7 @@
 
 `gitx` provides an Ink-based terminal UI for browsing local repositories and inspecting Git state without leaving the terminal.
 
-**Current version:** 1.1.1
+**Current version:** 1.1.2
 
 ## Functional Scope
 
@@ -40,13 +40,13 @@
 - The codebase must remain compatible with Node.js ESM and TypeScript `NodeNext`.
 - Generated vendor files must be refreshed through `npm run sync:pajussara`, not hand-edited.
 - Application-specific behavior must remain in `src/`.
+- JavaScript/TypeScript and Markdown linting must run through `npm run lint`.
 - The committed test suite under `test/` must run through `npm test`.
 - The project must continue to build with `npm run build` and type-check with `npm run typecheck`.
 
 ## Current Gaps
 
-- There is no committed lint configuration yet.
-- Workflow automation must treat those gaps as intentional current state rather than missing scripts to invent.
+- Root documentation still lives at the repository root even though workflow metadata also names `docs/` as a documentation directory.
 
 ## Roadmap — Minor Issues
 
@@ -54,7 +54,7 @@
 > live codebase before being marked done.
 
 | ID | Source step | Description | File / Path | Priority | Status |
-|----|-------------|-------------|-------------|----------|--------|
+| -- | ----------- | ----------- | ----------- | -------- | ------ |
 | RI-001 | step_05 | Documented the `.github` directory in the main project docs. | README.md | Low | done |
 | RI-002 | step_13 | Removed the markdown list-indentation violation in the requirements doc. | FUNCTIONAL_REQUIREMENTS.md | Low | done |
 | RI-003 | step_02 | Updated stale documentation that claimed the repo had no committed test suite. | README.md, ARCHITECTURE.md, FUNCTIONAL_REQUIREMENTS.md, .github/copilot-instructions.md | Medium | done |

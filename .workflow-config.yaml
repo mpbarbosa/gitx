@@ -5,7 +5,7 @@ project:
   name: "gitx"
   type: "typescript-application"
   kind: "nodejs_automation"
-  version: "1.1.1"
+  version: "1.1.2"
   description: "Ink-based TypeScript terminal UI for browsing local Git repositories and running folder-scoped Git commands"
 
 tech_stack:
@@ -16,17 +16,22 @@ tech_stack:
   runtime: "node"
   ui_framework: "ink"
   test_framework: "jest"
-  lint_command: "none"
+  lint_command: "npm run lint"
+  lint_commands:
+    javascript: "npm run lint:js"
+    typescript: "npm run lint:js"
+    markdown: "npm run lint:md"
 
 structure:
   source_dirs:
     - src
-  docs_dirs: []
+  docs_dirs: [docs]
   key_docs:
     - README.md
     - ARCHITECTURE.md
     - FUNCTIONAL_REQUIREMENTS.md
     - CHANGELOG.md
+    - FLOWCHART.md
     - .github/copilot-instructions.md
   test_dirs: [test]
 
@@ -43,11 +48,11 @@ ai_personas:
     - devops_engineer
     - dependency_analyst
     - test_engineer
+    - code_quality_analyst
     - git_specialist
     - async_performance_engineer
     - performance_engineer
   disabled:
-    - code_quality_analyst
     - prompt_engineer
     - ux_analyst
     - accessibility_expert
@@ -201,8 +206,7 @@ workflow:
       file: "step_10.js"
       description: "Run configured lint and code quality checks"
       phase: 2
-      enabled: false
-      reason: "The repository does not yet include a committed lint configuration."
+      enabled: true
       can_parallelize: true
       dependencies: [step_09]
       ai_persona: code_quality_analyst
@@ -316,7 +320,11 @@ validation:
     required: true
 
 linting:
-  md_linter: "none"
+  js_linter: "eslint"
+  js_config: "eslint.config.mjs"
+  js_glob: "{src,test}/**/*.{js,jsx,ts,tsx}"
+  md_linter: "markdownlint-cli2"
+  md_config: ".markdownlint-cli2.jsonc"
   md_glob: "**/*.md"
   md_excludes:
     - "node_modules/**"

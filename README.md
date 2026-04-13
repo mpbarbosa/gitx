@@ -15,6 +15,9 @@ npm run dev
 ```bash
 npm run sync:pajussara
 npm run dev
+npm run lint
+npm run lint:js
+npm run lint:md
 npm test
 npm run build
 npm run start
@@ -29,4 +32,4 @@ This repository now includes `.workflow-config.yaml` plus the root documentation
 
 Repository automation metadata and project-specific Copilot guidance live under `.github/`.
 
-The workflow configuration can now run the committed Jest-based test suite through `npm test`. Lint execution still remains disabled because the repository does not yet include a committed lint configuration.
+The workflow configuration can now run the committed lint and test surface through `npm run lint` and `npm test`.

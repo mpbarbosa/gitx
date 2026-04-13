@@ -5,12 +5,15 @@
 - Install dependencies with `npm install`.
 - Sync the upstream `pajussara_tui_comp` CDN files with `npm run sync:pajussara`.
 - Run the TUI in development with `npm run dev`.
+- Lint the codebase with `npm run lint`.
+- Lint JavaScript/TypeScript with `npm run lint:js`.
+- Lint Markdown with `npm run lint:md`.
 - Run the committed Jest suite with `npm test`.
 - Build the app with `npm run build`.
 - Run the built CLI with `npm run start`.
 - Type-check the project with `npm run typecheck`.
 
-There is now a committed Jest-based test workflow under `test/` exposed through `npm test`, but there is still no committed lint configuration yet. Do not invent lint commands until the supporting tooling is added.
+The repository now includes a committed lint configuration. Prefer the published lint scripts above instead of inventing alternate commands.
 
 ## High-level architecture
 
