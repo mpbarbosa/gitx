@@ -25,6 +25,26 @@
       "score": 100,
       "issueCount": 0,
       "lastAnalyzed": "2026-04-12T23:51:18.617Z"
+    },
+    "jest.config.mjs": {
+      "score": 100,
+      "issueCount": 0,
+      "lastAnalyzed": "2026-04-13T00:25:39.404Z"
+    },
+    "package.json": {
+      "score": 100,
+      "issueCount": 0,
+      "lastAnalyzed": "2026-04-13T00:25:39.404Z"
+    },
+    "tsconfig.json": {
+      "score": 100,
+      "issueCount": 0,
+      "lastAnalyzed": "2026-04-13T00:25:39.404Z"
+    },
+    "tsconfig.test.json": {
+      "score": 100,
+      "issueCount": 0,
+      "lastAnalyzed": "2026-04-13T00:25:39.404Z"
     }
   }
 }
