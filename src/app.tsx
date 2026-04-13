@@ -1,14 +1,12 @@
-import {execFile, execFileSync} from 'node:child_process';
-import {readdirSync} from 'node:fs';
+import {execFile} from 'node:child_process';
+import {readdir} from 'node:fs/promises';
 import {basename, join} from 'node:path';
-import {promisify} from 'node:util';
 import {Box, Text, useApp, useInput} from 'ink';
-import {useCallback, useMemo, useState} from 'react';
+import {useCallback, useEffect, useMemo, useState} from 'react';
 import {DirectoryTextBrowserWithStatusBar, StatusBar} from './pajussara-cdn.js';
 import type {DirectoryTextBrowserPane, StatusBarHint, TextListItem} from './pajussara-cdn.js';
 
 const rootDirectory = '/home/mpb/Documents/GitHub';
-const execFileAsync = promisify(execFile);
 const primaryStatusBarHints = [
 	{key: 'q', label: 'Quit'},
 	{key: 'Tab', label: 'Focus'},
@@ -25,9 +23,35 @@ const primaryStatusBarHints = [
 type GitCommandStatus = 'idle' | 'loading' | 'done' | 'error';
 type GitTextView = 'status' | 'diff' | 'branch' | 'log';
 type GitLogOptionId = 'default' | 'oneline';
+type TextEntriesCache = Record<string, TextListItem[]>;
 
 function formatGitCommandLabel(args: readonly string[]): string {
 	return `git ${args.join(' ')}`;
+}
+
+function toUtf8Text(output: string | Buffer): string {
+	return typeof output === 'string' ? output : output.toString('utf8');
+}
+
+function execGit(args: readonly string[], cwd: string): Promise<string> {
+	return new Promise((resolve, reject) => {
+		execFile('git', [...args], {cwd, encoding: 'utf8'}, (error, stdout, stderr) => {
+			if (error) {
+				if (typeof error === 'object' && error !== null) {
+					const execError = error as Error & {stdout?: string; stderr?: string};
+					execError.stdout = toUtf8Text(stdout);
+					execError.stderr = toUtf8Text(stderr);
+					reject(execError);
+					return;
+				}
+
+				reject(error);
+				return;
+			}
+
+			resolve(toUtf8Text(stdout));
+		});
+	});
 }
 
 const gitLogOptions = {
@@ -64,9 +88,11 @@ function getGitLogOptionHints(selectedOptionId: GitLogOptionId): StatusBarHint[]
 	];
 }
 
-function getChildDirectories(directoryPath: string): string[] {
+async function getChildDirectories(directoryPath: string): Promise<string[]> {
 	try {
-		return readdirSync(directoryPath, {withFileTypes: true})
+		const entries = await readdir(directoryPath, {withFileTypes: true});
+
+		return entries
 			.filter((entry) => entry.isDirectory())
 			.map((entry) => join(directoryPath, entry.name))
 			.sort((left, right) => left.localeCompare(right));
@@ -74,8 +100,6 @@ function getChildDirectories(directoryPath: string): string[] {
 		return [];
 	}
 }
-
-const initialSelectedDirectoryPath = getChildDirectories(rootDirectory)[0] ?? null;
 
 function getStatusFromLine(line: string): TextListItem['status'] {
 	if (line.startsWith('##')) {
@@ -106,16 +130,13 @@ function getGitErrorMessage(error: unknown): string {
 	return error instanceof Error ? error.message : 'Unknown git command error';
 }
 
-function getGitStatusEntries(directoryPath: string | null): TextListItem[] {
+async function getGitStatusEntries(directoryPath: string | null): Promise<TextListItem[]> {
 	if (!directoryPath) {
 		return [];
 	}
 
 	try {
-		const output = execFileSync('git', ['status', '--short', '--branch'], {
-			cwd: directoryPath,
-			encoding: 'utf8'
-		});
+		const output = await execGit(['status', '--short', '--branch'], directoryPath);
 		const lines = output
 			.split('\n')
 			.map((line) => line.trimEnd())
@@ -196,16 +217,13 @@ function getDiffStatusFromLine(line: string): TextListItem['status'] {
 	return 'pending';
 }
 
-function getGitDiffEntries(directoryPath: string | null): TextListItem[] {
+async function getGitDiffEntries(directoryPath: string | null): Promise<TextListItem[]> {
 	if (!directoryPath) {
 		return [];
 	}
 
 	try {
-		const output = execFileSync('git', ['diff'], {
-			cwd: directoryPath,
-			encoding: 'utf8'
-		});
+		const output = await execGit(['diff'], directoryPath);
 		const lines = output.split('\n').map((line) => line.trimEnd());
 
 		if (lines.every((line) => line.length === 0)) {
@@ -246,16 +264,13 @@ function getGitDiffEntries(directoryPath: string | null): TextListItem[] {
 	}
 }
 
-function getGitBranchEntries(directoryPath: string | null): TextListItem[] {
+async function getGitBranchEntries(directoryPath: string | null): Promise<TextListItem[]> {
 	if (!directoryPath) {
 		return [];
 	}
 
 	try {
-		const output = execFileSync('git', ['branch'], {
-			cwd: directoryPath,
-			encoding: 'utf8'
-		});
+		const output = await execGit(['branch'], directoryPath);
 		const lines = output
 			.split('\n')
 			.map((line) => line.trimEnd())
@@ -315,16 +330,16 @@ function getLogStatusFromLine(line: string): TextListItem['status'] {
 	return 'done';
 }
 
-function getGitLogEntries(directoryPath: string | null, logArgs: readonly string[] = []): TextListItem[] {
+async function getGitLogEntries(
+	directoryPath: string | null,
+	logArgs: readonly string[] = []
+): Promise<TextListItem[]> {
 	if (!directoryPath) {
 		return [];
 	}
 
 	try {
-		const output = execFileSync('git', ['log', ...logArgs], {
-			cwd: directoryPath,
-			encoding: 'utf8'
-		});
+		const output = await execGit(['log', ...logArgs], directoryPath);
 		const lines = output.split('\n').map((line) => line.trimEnd());
 
 		if (lines.every((line) => line.length === 0)) {
@@ -365,11 +380,11 @@ function getGitLogEntries(directoryPath: string | null, logArgs: readonly string
 	}
 }
 
-function getTextEntriesForView(
+async function getTextEntriesForView(
 	textView: GitTextView,
 	directoryPath: string | null,
 	logArgs: readonly string[] = []
-): TextListItem[] {
+): Promise<TextListItem[]> {
 	switch (textView) {
 		case 'diff':
 			return getGitDiffEntries(directoryPath);
@@ -382,11 +397,22 @@ function getTextEntriesForView(
 	}
 }
 
+function getTextLoadingLabel(textView: GitTextView, titleSuffix: string): string {
+	switch (textView) {
+		case 'diff':
+			return 'Loading git diff...';
+		case 'branch':
+			return 'Loading git branch...';
+		case 'log':
+			return `Loading git log${titleSuffix}...`;
+		case 'status':
+			return 'Loading git status...';
+	}
+}
+
 export function App() {
 	const {exit} = useApp();
-	const [selectedDirectoryPath, setSelectedDirectoryPath] = useState<string | null>(
-		initialSelectedDirectoryPath
-	);
+	const [selectedDirectoryPath, setSelectedDirectoryPath] = useState<string | null>(null);
 	const [selectedTextItemId, setSelectedTextItemId] = useState<string | null>(null);
 	const [activeTextView, setActiveTextView] = useState<GitTextView>('status');
 	const [focusedPane, setFocusedPane] = useState<DirectoryTextBrowserPane>('directories');
@@ -398,6 +424,8 @@ export function App() {
 	const [selectedGitLogOptionId, setSelectedGitLogOptionId] =
 		useState<GitLogOptionId>('default');
 	const [isGitLogHintBarOpen, setIsGitLogHintBarOpen] = useState(false);
+	const [textItems, setTextItems] = useState<TextListItem[]>([]);
+	const [textEntriesCache, setTextEntriesCache] = useState<TextEntriesCache>({});
 	const browserWidth = Math.max(60, (process.stdout.columns ?? 100) - 4);
 	const browserHeight = Math.max(
 		10,
@@ -405,11 +433,87 @@ export function App() {
 	);
 	const textPageSize = Math.max(1, browserHeight - 2);
 	const activeGitLogOption = gitLogOptions[activeGitLogOptionId];
-
-	const textItems = useMemo(
-		() => getTextEntriesForView(activeTextView, selectedDirectoryPath, activeGitLogOption.args),
-		[activeGitLogOption.args, activeTextView, selectedDirectoryPath, directoryRefreshVersion]
+	const textEntriesCacheKey = useMemo(
+		() =>
+			selectedDirectoryPath
+				? [
+						selectedDirectoryPath,
+						activeTextView,
+						activeGitLogOptionId,
+						String(directoryRefreshVersion)
+					].join('::')
+				: null,
+		[activeGitLogOptionId, activeTextView, directoryRefreshVersion, selectedDirectoryPath]
 	);
+	const cachedTextItems =
+		textEntriesCacheKey === null ? undefined : textEntriesCache[textEntriesCacheKey];
+	const textLoadingLabel = useMemo(
+		() => getTextLoadingLabel(activeTextView, activeGitLogOption.titleSuffix),
+		[activeGitLogOption.titleSuffix, activeTextView]
+	);
+
+	useEffect(() => {
+		let isDisposed = false;
+
+		void getChildDirectories(rootDirectory).then((childDirectories) => {
+			if (isDisposed) {
+				return;
+			}
+
+			setSelectedDirectoryPath((currentDirectoryPath) => currentDirectoryPath ?? childDirectories[0] ?? null);
+		});
+
+		return () => {
+			isDisposed = true;
+		};
+	}, []);
+
+	useEffect(() => {
+		if (!selectedDirectoryPath || !textEntriesCacheKey) {
+			setTextItems([]);
+			return;
+		}
+
+		if (cachedTextItems) {
+			setTextItems(cachedTextItems);
+			return;
+		}
+
+		let isDisposed = false;
+		setTextItems([
+			{
+				id: `${textEntriesCacheKey}:loading`,
+				text: textLoadingLabel,
+				status: 'running'
+			}
+		]);
+
+		void getTextEntriesForView(activeTextView, selectedDirectoryPath, activeGitLogOption.args).then(
+			(nextTextItems) => {
+				if (isDisposed) {
+					return;
+				}
+
+				setTextEntriesCache((currentCache) => ({
+					...currentCache,
+					[textEntriesCacheKey]: nextTextItems
+				}));
+				setTextItems(nextTextItems);
+			}
+		);
+
+		return () => {
+			isDisposed = true;
+		};
+	}, [
+		activeGitLogOption.args,
+		activeTextView,
+		cachedTextItems,
+		selectedDirectoryPath,
+		textEntriesCacheKey,
+		textLoadingLabel
+	]);
+
 	const selectedTextItem = textItems.find((item) => item.id === selectedTextItemId) ?? null;
 	const getSelectedTextIndex = useCallback(() => {
 		if (textItems.length === 0) {
@@ -448,8 +552,8 @@ export function App() {
 	);
 	const getTextItems = useCallback(
 		(directoryPath: string | null) =>
-			getTextEntriesForView(activeTextView, directoryPath, activeGitLogOption.args),
-		[activeGitLogOption.args, activeTextView]
+			directoryPath === selectedDirectoryPath ? textItems : [],
+		[selectedDirectoryPath, textItems]
 	);
 	const handleSelectDirectory = useCallback((directoryPath: string | null) => {
 		setSelectedDirectoryPath(directoryPath);
@@ -488,10 +592,7 @@ export function App() {
 			setGitCommandErrorMessage(null);
 
 			try {
-				await execFileAsync('git', args, {
-					cwd: selectedDirectoryPath,
-					encoding: 'utf8'
-				});
+				await execGit(args, selectedDirectoryPath);
 				setGitCommandStatus('done');
 			} catch (error) {
 				setGitCommandStatus('error');

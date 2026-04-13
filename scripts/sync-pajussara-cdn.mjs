@@ -41,7 +41,20 @@ async function syncFile(relativePath) {
 }
 
 try {
-	await Promise.all(mirroredFiles.map(syncFile));
+	const results = await Promise.allSettled(mirroredFiles.map(syncFile));
+	const failures = results.flatMap((result, index) =>
+		result.status === 'rejected'
+			? [{relativePath: mirroredFiles[index], error: result.reason}]
+			: []
+	);
+
+	if (failures.length > 0) {
+		for (const failure of failures) {
+			console.error(`Failed to sync ${failure.relativePath}:`, failure.error);
+		}
+
+		process.exit(1);
+	}
 } catch (error) {
 	console.error('Failed to sync pajussara_tui_comp files:', error);
 	process.exit(1);

@@ -1,13 +1,14 @@
 import React from 'react';
 import {jest} from '@jest/globals';
 
-const mockExecFileSync = jest.fn();
 const mockExecFile = jest.fn();
+const mockExecFileSync = jest.fn();
+const mockReaddir = jest.fn();
 const mockReaddirSync = jest.fn();
 const mockJoin = jest.fn();
 const mockBasename = jest.fn();
 
-mockReaddirSync.mockReturnValue([{isDirectory: () => true, name: 'repo1'}]);
+mockReaddir.mockResolvedValue([{isDirectory: () => true, name: 'repo1'}]);
 mockJoin.mockImplementation((...args: string[]) => args.join('/'));
 mockBasename.mockImplementation((targetPath: string) => targetPath.split('/').pop());
 mockExecFile.mockImplementation(
@@ -15,17 +16,34 @@ mockExecFile.mockImplementation(
 		_cmd: string,
 		_args: string[],
 		_options: unknown,
-		callback: (error: null, stdout: string, stderr: string) => void
-	) => callback(null, '', '')
+		callback: (error: Error | null, stdout: string, stderr: string) => void
+	) => {
+		const gitSubcommand = _args[0];
+
+		if (gitSubcommand === 'status') {
+			callback(null, '## main\n?? file.txt\n M changed.js\n', '');
+			return;
+		}
+
+		if (gitSubcommand === 'diff') {
+			callback(null, 'diff --git a/file b/file\n@@ -1,2 +1,2 @@\n+added\n-removed\n', '');
+			return;
+		}
+
+		if (gitSubcommand === 'branch') {
+			callback(null, '* main\n  dev\n', '');
+			return;
+		}
+
+		if (gitSubcommand === 'log') {
+			callback(null, 'commit abc123\nAuthor: Test\nDate: Today\n\nInitial commit\n', '');
+			return;
+		}
+
+		callback(null, '', '');
+	}
 );
 type ExecFileCallback = (error: Error | null, stdout: string, stderr: string) => void;
-mockExecFileSync.mockImplementation((_cmd: string, args: string[]) => {
-	if (args[0] === 'status') return '## main\n?? file.txt\n M changed.js\n';
-	if (args[0] === 'diff') return 'diff --git a/file b/file\n@@ -1,2 +1,2 @@\n+added\n-removed\n';
-	if (args[0] === 'branch') return '* main\n  dev\n';
-	if (args[0] === 'log') return 'commit abc123\nAuthor: Test\nDate: Today\n\nInitial commit\n';
-	return '';
-});
 
 jest.unstable_mockModule('node:child_process', () => ({
 	execFileSync: mockExecFileSync,
@@ -33,6 +51,13 @@ jest.unstable_mockModule('node:child_process', () => ({
 	default: {
 		execFileSync: mockExecFileSync,
 		execFile: mockExecFile
+	}
+}));
+
+jest.unstable_mockModule('node:fs/promises', () => ({
+	readdir: mockReaddir,
+	default: {
+		readdir: mockReaddir
 	}
 }));
 
@@ -101,13 +126,23 @@ jest.unstable_mockModule('../src/pajussara-cdn', () => ({
 
 const {render} = await import('ink-testing-library');
 const {App} = await import('../src/app');
-const flushInput = async () => new Promise((resolve) => setTimeout(resolve, 0));
+const flushInput = async (cycles = 1) => {
+	for (let index = 0; index < cycles; index += 1) {
+		await new Promise((resolve) => setTimeout(resolve, 0));
+	}
+};
+
+async function renderApp() {
+	const instance = render(<App />);
+	await flushInput(4);
+	return instance;
+}
 
 describe('App', () => {
 	beforeEach(() => {
 		jest.clearAllMocks();
 
-		mockReaddirSync.mockReturnValue([{isDirectory: () => true, name: 'repo1'}]);
+		mockReaddir.mockResolvedValue([{isDirectory: () => true, name: 'repo1'}]);
 		mockJoin.mockImplementation((...args: string[]) => args.join('/'));
 		mockBasename.mockImplementation((targetPath: string) => targetPath.split('/').pop());
 		mockExecFile.mockImplementation(
@@ -116,21 +151,36 @@ describe('App', () => {
 				_args: string[],
 				_options: unknown,
 				callback: (error: null, stdout: string, stderr: string) => void
-			) => callback(null, '', '')
-		);
-		mockExecFileSync.mockImplementation((_cmd: string, args: string[]) => {
-			if (args[0] === 'status') return '## main\n?? file.txt\n M changed.js\n';
-			if (args[0] === 'diff') {
-				return 'diff --git a/file b/file\n@@ -1,2 +1,2 @@\n+added\n-removed\n';
+			) => {
+				const gitSubcommand = _args[0];
+
+				if (gitSubcommand === 'status') {
+					callback(null, '## main\n?? file.txt\n M changed.js\n', '');
+					return;
+				}
+
+				if (gitSubcommand === 'diff') {
+					callback(null, 'diff --git a/file b/file\n@@ -1,2 +1,2 @@\n+added\n-removed\n', '');
+					return;
+				}
+
+				if (gitSubcommand === 'branch') {
+					callback(null, '* main\n  dev\n', '');
+					return;
+				}
+
+				if (gitSubcommand === 'log') {
+					callback(null, 'commit abc123\nAuthor: Test\nDate: Today\n\nInitial commit\n', '');
+					return;
+				}
+
+				callback(null, '', '');
 			}
-			if (args[0] === 'branch') return '* main\n  dev\n';
-			if (args[0] === 'log') return 'commit abc123\nAuthor: Test\nDate: Today\n\nInitial commit\n';
-			return '';
-		});
+		);
 	});
 
-	it('renders without crashing and shows the default status view', () => {
-		const {lastFrame} = render(<App />);
+	it('renders without crashing and shows the default status view', async () => {
+		const {lastFrame} = await renderApp();
 
 		expect(lastFrame()).toContain('gitx');
 		expect(lastFrame()).toContain('DirectoryTextBrowserWithStatusBar');
@@ -138,10 +188,10 @@ describe('App', () => {
 		expect(lastFrame()).toContain('GIT STATUS');
 	});
 
-	it('does not fetch remotes while rendering the default status view', () => {
-		render(<App />);
+	it('does not fetch remotes while rendering the default status view', async () => {
+		await renderApp();
 
-		expect(mockExecFileSync).not.toHaveBeenCalledWith(
+		expect(mockExecFile).not.toHaveBeenCalledWith(
 			'git',
 			expect.arrayContaining(['fetch']),
 			expect.anything()
@@ -149,70 +199,71 @@ describe('App', () => {
 	});
 
 	it('switches to the diff view from keyboard input', async () => {
-		const instance = render(<App />);
+		const instance = await renderApp();
 
 		instance.stdin.write('d');
-		await flushInput();
+		await flushInput(4);
 
 		expect(instance.lastFrame()).toContain('GIT DIFF');
 	});
 
 	it('switches to the branch view from keyboard input', async () => {
-		const instance = render(<App />);
+		const instance = await renderApp();
 
 		instance.stdin.write('b');
-		await flushInput();
+		await flushInput(4);
 
 		expect(instance.lastFrame()).toContain('GIT BRANCH');
 	});
 
 	it('opens the git log options and confirms the default log view', async () => {
-		const instance = render(<App />);
+		const instance = await renderApp();
 
 		instance.stdin.write('l');
-		await flushInput();
+		await flushInput(2);
 		expect(instance.lastFrame()).toContain('Enter:Run');
 		instance.stdin.write('\r');
-		await flushInput();
+		await flushInput(4);
 
 		expect(instance.lastFrame()).toContain('GIT LOG');
 	});
 
-	it('shows a friendly message when the selected folder is not a git repository', () => {
-		mockExecFileSync.mockImplementation((_cmd: string, args: string[]) => {
+	it('shows a friendly message when the selected folder is not a git repository', async () => {
+		mockExecFile.mockImplementation((_cmd: string, args: string[], _options: unknown, callback: ExecFileCallback) => {
 			if (args[0] === 'status') {
 				const error = new Error('fatal: not a git repository') as Error & {stderr?: string};
-				error.stderr = 'fatal: not a git repository';
-				throw error;
+				callback(error, '', 'fatal: not a git repository');
+				return;
 			}
 
-			return '';
+			callback(null, '', '');
 		});
 
-		const {lastFrame} = render(<App />);
+		const {lastFrame} = await renderApp();
 
 		expect(lastFrame()).toContain('Info: This folder is not a Git repository.');
 	});
 
-	it('shows a fallback error message for unknown git failures', () => {
-		mockExecFileSync.mockImplementation((_cmd: string, args: string[]) => {
+	it('shows a fallback error message for unknown git failures', async () => {
+		mockExecFile.mockImplementation((_cmd: string, args: string[], _options: unknown, callback: ExecFileCallback) => {
 			if (args[0] === 'status') {
-				throw 42;
+				callback(42 as unknown as Error, '', '');
+				return;
 			}
 
-			return '';
+			callback(null, '', '');
 		});
 
-		const {lastFrame} = render(<App />);
+		const {lastFrame} = await renderApp();
 
 		expect(lastFrame()).toContain('git status failed: Unknown git command error');
 	});
 
 	it('runs git fetch --prune when pressing r', async () => {
-		const instance = render(<App />);
+		const instance = await renderApp();
 
 		instance.stdin.write('r');
-		await flushInput();
+		await flushInput(2);
 
 		expect(mockExecFile).toHaveBeenCalledWith(
 			'git',
@@ -227,40 +278,45 @@ describe('App', () => {
 
 	it('shows command feedback while git fetch --prune is running and after it completes', async () => {
 		let completeCommand: ExecFileCallback | undefined;
-		mockExecFile.mockImplementationOnce(
-			(
-				_cmd: string,
-				_args: string[],
-				_options: unknown,
-				callback: ExecFileCallback
-			) => {
-				completeCommand = callback;
+		mockExecFile.mockImplementation(
+			(_cmd: string, args: string[], _options: unknown, callback: ExecFileCallback) => {
+				if (args[0] === 'fetch') {
+					completeCommand = callback;
+					return;
+				}
+
+				if (args[0] === 'status') {
+					callback(null, '## main\n?? file.txt\n M changed.js\n', '');
+					return;
+				}
+
+				callback(null, '', '');
 			}
 		);
-		const instance = render(<App />);
+		const instance = await renderApp();
 
 		instance.stdin.write('r');
-		await flushInput();
+		await flushInput(2);
 
 		expect(instance.lastFrame()).toContain('Command status: loading');
 		expect(instance.lastFrame()).toContain('Run:git fetch --prune');
 
 		completeCommand?.(null, '', '');
-		await flushInput();
+		await flushInput(4);
 
 		expect(instance.lastFrame()).toContain('Command status: done');
 		expect(instance.lastFrame()).toContain('Done:git fetch --prune');
 	});
 
 	it('clears command feedback when switching views', async () => {
-		const instance = render(<App />);
+		const instance = await renderApp();
 
 		instance.stdin.write('r');
-		await flushInput();
+		await flushInput(4);
 		expect(instance.lastFrame()).toContain('Done:git fetch --prune');
 
 		instance.stdin.write('d');
-		await flushInput();
+		await flushInput(4);
 
 		expect(instance.lastFrame()).toContain('Command status: idle');
 		expect(instance.lastFrame()).not.toContain('Done:git fetch --prune');
