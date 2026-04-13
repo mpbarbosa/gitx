@@ -8,7 +8,7 @@
 
 | Version | Milestone | Notes |
 | --- | --- | --- |
-| 1.1.3 | Runnable committed test suite | Adds a Jest-based `npm test` workflow for the existing `test/` suite and documents the supported validation path. |
+| 1.1.4 | Runnable committed test suite | Adds a Jest-based `npm test` workflow for the existing `test/` suite and documents the supported validation path. |
 
 The CLI bootstrap lives in `src/index.tsx`, which renders `App` from `src/app.tsx`. All user-facing behavior is implemented in React components under `src/`.
 
