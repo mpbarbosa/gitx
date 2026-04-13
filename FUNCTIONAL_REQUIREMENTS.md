@@ -61,3 +61,5 @@
 | RI-004 | step_02 | Refreshed `.workflow-config.yaml` so workflow metadata, docs roots, and test execution settings match the live repository. | .workflow-config.yaml | Medium | done |
 | RI-005 | step_20 | Added explicit top-level failure handling to the pajussara CDN sync script. | scripts/sync-pajussara-cdn.mjs | Medium | done |
 | RI-006 | step_05 | Removed stale workflow metadata that pointed at a nonexistent `docs/` root and `FLOWCHART.md`. | .workflow-config.yaml, FUNCTIONAL_REQUIREMENTS.md | Medium | done |
+| RI-007 | step_10 | Surfaced root directory loading failures in the UI status area instead of silently returning an empty directory list. | src/app.tsx, test/app.test.tsx | Medium | done |
+| RI-008 | step_19 | Replaced the unsafe exec callback type assertion with a typed error normalizer that preserves fallback messages when stderr is empty. | src/app.tsx | Medium | done |
