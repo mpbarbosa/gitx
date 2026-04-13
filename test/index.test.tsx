@@ -1,38 +1,46 @@
-import * as ink from 'ink';
+import {jest} from '@jest/globals';
 
-jest.mock('ink', () => ({
-  render: jest.fn()
-}));
-
-jest.mock('../src/app', () => ({
-  App: () => null
-}));
+const renderMock = jest.fn();
 
 describe('index.tsx', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-    jest.resetModules();
-  });
+	const loadIndex = async () => {
+		jest.resetModules();
 
-  it('should call ink.render with <App />', () => {
-    require('../src/index');
-    expect(ink.render).toHaveBeenCalledTimes(1);
-    const callArg = (ink.render as jest.Mock).mock.calls[0][0];
-    expect(callArg.type.name || callArg.type.displayName || callArg.type).toBe('App');
-  });
+		jest.unstable_mockModule('ink', () => ({
+			render: renderMock
+		}));
 
-  it('should not throw when rendering App', () => {
-    expect(() => {
-      require('../src/index');
-    }).not.toThrow();
-  });
+		jest.unstable_mockModule('../src/app.js', () => ({
+			App: function App() {
+				return null;
+			}
+		}));
 
-  it('should handle error if render throws', () => {
-    (ink.render as jest.Mock).mockImplementation(() => {
-      throw new Error('render failed');
-    });
-    expect(() => {
-      require('../src/index');
-    }).toThrow('render failed');
-  });
+		await import('../src/index');
+	};
+
+	beforeEach(() => {
+		renderMock.mockReset();
+		jest.clearAllMocks();
+	});
+
+	it('calls ink.render with App', async () => {
+		await loadIndex();
+
+		expect(renderMock).toHaveBeenCalledTimes(1);
+		const callArg = renderMock.mock.calls[0]?.[0];
+		expect(callArg?.type?.name || callArg?.type?.displayName || callArg?.type).toBe('App');
+	});
+
+	it('does not throw while rendering App', async () => {
+		await expect(loadIndex()).resolves.toBeUndefined();
+	});
+
+	it('propagates render failures', async () => {
+		renderMock.mockImplementation(() => {
+			throw new Error('render failed');
+		});
+
+		await expect(loadIndex()).rejects.toThrow('render failed');
+	});
 });

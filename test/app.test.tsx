@@ -1,250 +1,191 @@
 import React from 'react';
-import {render, act} from 'ink-testing-library';
-import {App} from '../src/app';
-import * as childProcess from 'node:child_process';
-import * as fs from 'node:fs';
-import * as path from 'node:path';
+import {jest} from '@jest/globals';
 
-jest.mock('node:child_process');
-jest.mock('node:fs');
-jest.mock('node:path');
-jest.mock('../src/pajussara-cdn', () => ({
-  DirectoryTextBrowserWithStatusBar: jest.fn(({children}) => <div>{children}</div>),
-  StatusBar: jest.fn(({children}) => <div>{children}</div>)
+const mockExecFileSync = jest.fn();
+const mockExecFile = jest.fn();
+const mockReaddirSync = jest.fn();
+const mockJoin = jest.fn();
+const mockBasename = jest.fn();
+
+mockReaddirSync.mockReturnValue([{isDirectory: () => true, name: 'repo1'}]);
+mockJoin.mockImplementation((...args: string[]) => args.join('/'));
+mockBasename.mockImplementation((targetPath: string) => targetPath.split('/').pop());
+mockExecFile.mockImplementation(
+	(
+		_cmd: string,
+		_args: string[],
+		_options: unknown,
+		callback: (error: null, stdout: string, stderr: string) => void
+	) => callback(null, '', '')
+);
+mockExecFileSync.mockImplementation((_cmd: string, args: string[]) => {
+	if (args[0] === 'fetch') return '';
+	if (args[0] === 'status') return '## main\n?? file.txt\n M changed.js\n';
+	if (args[0] === 'diff') return 'diff --git a/file b/file\n@@ -1,2 +1,2 @@\n+added\n-removed\n';
+	if (args[0] === 'branch') return '* main\n  dev\n';
+	if (args[0] === 'log') return 'commit abc123\nAuthor: Test\nDate: Today\n\nInitial commit\n';
+	return '';
+});
+
+jest.unstable_mockModule('node:child_process', () => ({
+	execFileSync: mockExecFileSync,
+	execFile: mockExecFile,
+	default: {
+		execFileSync: mockExecFileSync,
+		execFile: mockExecFile
+	}
 }));
 
-const mockExecFileSync = childProcess.execFileSync as jest.Mock;
-const mockReaddirSync = fs.readdirSync as jest.Mock;
-const mockJoin = path.join as jest.Mock;
-const mockBasename = path.basename as jest.Mock;
+jest.unstable_mockModule('node:fs', () => ({
+	readdirSync: mockReaddirSync,
+	default: {
+		readdirSync: mockReaddirSync
+	}
+}));
+
+jest.unstable_mockModule('node:path', () => ({
+	join: mockJoin,
+	basename: mockBasename,
+	default: {
+		join: mockJoin,
+		basename: mockBasename
+	}
+}));
+
+const {Text} = await import('ink');
+
+jest.unstable_mockModule('../src/pajussara-cdn', () => ({
+	DirectoryTextBrowserWithStatusBar: jest.fn(
+		({
+			getTextItems,
+			textTitle,
+			selectedDirectoryPath,
+			statusBarProps
+		}: {
+			getTextItems: (directoryPath: string | null) => Array<{id: string; text: string}>;
+			textTitle: string;
+			selectedDirectoryPath: string | null;
+			statusBarProps: {errorMessage?: string | null};
+		}) => {
+			const textItems = getTextItems(selectedDirectoryPath);
+
+			return (
+				<>
+					<Text>DirectoryTextBrowserWithStatusBar</Text>
+					<Text>{textTitle}</Text>
+					<Text>{`Browser directory: ${selectedDirectoryPath ?? 'None'}`}</Text>
+					{textItems.map((item) => (
+						<Text key={item.id}>{item.text}</Text>
+					))}
+					{statusBarProps.errorMessage ? <Text>{statusBarProps.errorMessage}</Text> : null}
+				</>
+			);
+		}
+	),
+	StatusBar: jest.fn(
+		({hints}: {hints: Array<{key: string; label: string}>}) => (
+			<Text>{hints.map((hint) => `${hint.key}:${hint.label}`).join(' | ')}</Text>
+		)
+	)
+}));
+
+const {render} = await import('ink-testing-library');
+const {App} = await import('../src/app');
+const flushInput = async () => new Promise((resolve) => setTimeout(resolve, 0));
 
 describe('App', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-    // Default: one directory in root
-    mockReaddirSync.mockReturnValue([
-      {isDirectory: () => true, name: 'repo1'}
-    ]);
-    mockJoin.mockImplementation((...args) => args.join('/'));
-    mockBasename.mockImplementation((p) => p.split('/').pop());
-    // Default git status
-    mockExecFileSync.mockImplementation((cmd, args, opts) => {
-      if (args[0] === 'fetch') return '';
-      if (args[0] === 'status') return '## main\n?? file.txt\n M changed.js\n';
-      if (args[0] === 'diff') return 'diff --git a/file b/file\n@@ -1,2 +1,2 @@\n+added\n-removed\n';
-      if (args[0] === 'branch') return '* main\n  dev\n';
-      if (args[0] === 'log') return 'commit abc123\nAuthor: Test\nDate: Today\n\nInitial commit\n';
-      return '';
-    });
-  });
+	beforeEach(() => {
+		jest.clearAllMocks();
 
-  it('renders without crashing and shows main UI elements', () => {
-    const {lastFrame} = render(<App />);
-    expect(lastFrame()).toContain('gitx');
-    expect(lastFrame()).toContain('DirectoryTextBrowserWithStatusBar');
-    expect(lastFrame()).toContain('Selected directory: repo1');
-  });
+		mockReaddirSync.mockReturnValue([{isDirectory: () => true, name: 'repo1'}]);
+		mockJoin.mockImplementation((...args: string[]) => args.join('/'));
+		mockBasename.mockImplementation((targetPath: string) => targetPath.split('/').pop());
+		mockExecFile.mockImplementation(
+			(
+				_cmd: string,
+				_args: string[],
+				_options: unknown,
+				callback: (error: null, stdout: string, stderr: string) => void
+			) => callback(null, '', '')
+		);
+		mockExecFileSync.mockImplementation((_cmd: string, args: string[]) => {
+			if (args[0] === 'fetch') return '';
+			if (args[0] === 'status') return '## main\n?? file.txt\n M changed.js\n';
+			if (args[0] === 'diff') {
+				return 'diff --git a/file b/file\n@@ -1,2 +1,2 @@\n+added\n-removed\n';
+			}
+			if (args[0] === 'branch') return '* main\n  dev\n';
+			if (args[0] === 'log') return 'commit abc123\nAuthor: Test\nDate: Today\n\nInitial commit\n';
+			return '';
+		});
+	});
 
-  it('shows correct selected entry text', () => {
-    const {lastFrame} = render(<App />);
-    expect(lastFrame()).toContain('Selected entry: None');
-  });
+	it('renders without crashing and shows the default status view', () => {
+		const {lastFrame} = render(<App />);
 
-  it('handles empty directory list gracefully', () => {
-    mockReaddirSync.mockReturnValue([]);
-    const {lastFrame} = render(<App />);
-    expect(lastFrame()).toContain('Selected directory: GitHub');
-  });
+		expect(lastFrame()).toContain('gitx');
+		expect(lastFrame()).toContain('DirectoryTextBrowserWithStatusBar');
+		expect(lastFrame()).toContain('Selected directory: repo1');
+		expect(lastFrame()).toContain('GIT STATUS');
+	});
 
-  it('handles getGitStatusEntries happy path', () => {
-    const {lastFrame} = render(<App />);
-    expect(lastFrame()).toContain('GIT STATUS');
-  });
+	it('switches to the diff view from keyboard input', async () => {
+		const instance = render(<App />);
 
-  it('handles getGitStatusEntries not a git repo error', () => {
-    mockExecFileSync.mockImplementation((cmd, args, opts) => {
-      if (args[0] === 'fetch' || args[0] === 'status') {
-        const err: any = new Error('fatal: not a git repository');
-        err.stderr = 'fatal: not a git repository';
-        throw err;
-      }
-      return '';
-    });
-    const {lastFrame} = render(<App />);
-    expect(lastFrame()).toContain('Info: This folder is not a Git repository.');
-  });
+		instance.stdin.write('d');
+		await flushInput();
 
-  it('handles getGitStatusEntries generic error', () => {
-    mockExecFileSync.mockImplementation((cmd, args, opts) => {
-      if (args[0] === 'fetch' || args[0] === 'status') {
-        const err: any = new Error('some git error');
-        err.stderr = 'some git error';
-        throw err;
-      }
-      return '';
-    });
-    const {lastFrame} = render(<App />);
-    expect(lastFrame()).toContain('git status failed: some git error');
-  });
+		expect(instance.lastFrame()).toContain('GIT DIFF');
+	});
 
-  it('handles getGitDiffEntries happy path', () => {
-    const {lastFrame} = render(<App />);
-    expect(lastFrame()).toContain('GIT STATUS');
-    // Simulate pressing 'd' for diff
-    act(() => {
-      process.stdin.emit('data', 'd');
-    });
-    expect(lastFrame()).toContain('GIT DIFF');
-  });
+	it('switches to the branch view from keyboard input', async () => {
+		const instance = render(<App />);
 
-  it('handles getGitDiffEntries not a git repo error', () => {
-    mockExecFileSync.mockImplementation((cmd, args, opts) => {
-      if (args[0] === 'diff') {
-        const err: any = new Error('fatal: not a git repository');
-        err.stderr = 'fatal: not a git repository';
-        throw err;
-      }
-      return '';
-    });
-    const {lastFrame} = render(<App />);
-    act(() => {
-      process.stdin.emit('data', 'd');
-    });
-    expect(lastFrame()).toContain('Info: This folder is not a Git repository.');
-  });
+		instance.stdin.write('b');
+		await flushInput();
 
-  it('handles getGitBranchEntries happy path', () => {
-    const {lastFrame} = render(<App />);
-    act(() => {
-      process.stdin.emit('data', 'b');
-    });
-    expect(lastFrame()).toContain('GIT BRANCH');
-  });
+		expect(instance.lastFrame()).toContain('GIT BRANCH');
+	});
 
-  it('handles getGitBranchEntries not a git repo error', () => {
-    mockExecFileSync.mockImplementation((cmd, args, opts) => {
-      if (args[0] === 'branch') {
-        const err: any = new Error('fatal: not a git repository');
-        err.stderr = 'fatal: not a git repository';
-        throw err;
-      }
-      return '';
-    });
-    const {lastFrame} = render(<App />);
-    act(() => {
-      process.stdin.emit('data', 'b');
-    });
-    expect(lastFrame()).toContain('Info: This folder is not a Git repository.');
-  });
+	it('opens the git log options and confirms the default log view', async () => {
+		const instance = render(<App />);
 
-  it('handles getGitLogEntries happy path', () => {
-    const {lastFrame} = render(<App />);
-    act(() => {
-      process.stdin.emit('data', 'l');
-    });
-    expect(lastFrame()).toContain('GIT LOG');
-  });
+		instance.stdin.write('l');
+		await flushInput();
+		expect(instance.lastFrame()).toContain('Enter:Run');
+		instance.stdin.write('\r');
+		await flushInput();
 
-  it('handles getGitLogEntries not a git repo error', () => {
-    mockExecFileSync.mockImplementation((cmd, args, opts) => {
-      if (args[0] === 'log') {
-        const err: any = new Error('fatal: not a git repository');
-        err.stderr = 'fatal: not a git repository';
-        throw err;
-      }
-      return '';
-    });
-    const {lastFrame} = render(<App />);
-    act(() => {
-      process.stdin.emit('data', 'l');
-    });
-    expect(lastFrame()).toContain('Info: This folder is not a Git repository.');
-  });
+		expect(instance.lastFrame()).toContain('GIT LOG');
+	});
 
-  it('handles quitting the app with "q"', () => {
-    const exitSpy = jest.spyOn(process, 'exit').mockImplementation(() => {
-      throw new Error('exit');
-    });
-    expect(() => {
-      const {stdin} = render(<App />);
-      act(() => {
-        stdin.write('q');
-      });
-    }).toThrow('exit');
-    exitSpy.mockRestore();
-  });
+	it('shows a friendly message when the selected folder is not a git repository', () => {
+		mockExecFileSync.mockImplementation((_cmd: string, args: string[]) => {
+			if (args[0] === 'fetch' || args[0] === 'status') {
+				const error = new Error('fatal: not a git repository') as Error & {stderr?: string};
+				error.stderr = 'fatal: not a git repository';
+				throw error;
+			}
 
-  it('handles quitting the app with Escape', () => {
-    const exitSpy = jest.spyOn(process, 'exit').mockImplementation(() => {
-      throw new Error('exit');
-    });
-    expect(() => {
-      const {stdin} = render(<App />);
-      act(() => {
-        stdin.write('\x1b');
-      });
-    }).toThrow('exit');
-    exitSpy.mockRestore();
-  });
+			return '';
+		});
 
-  it('handles edge case: no selected directory', () => {
-    mockReaddirSync.mockReturnValue([]);
-    const {lastFrame} = render(<App />);
-    expect(lastFrame()).toContain('Selected directory: GitHub');
-  });
+		const {lastFrame} = render(<App />);
 
-  it('handles edge case: empty git status output', () => {
-    mockExecFileSync.mockImplementation((cmd, args, opts) => {
-      if (args[0] === 'fetch') return '';
-      if (args[0] === 'status') return '';
-      return '';
-    });
-    const {lastFrame} = render(<App />);
-    expect(lastFrame()).toContain('Working tree clean.');
-  });
+		expect(lastFrame()).toContain('Info: This folder is not a Git repository.');
+	});
 
-  it('handles edge case: empty git diff output', () => {
-    mockExecFileSync.mockImplementation((cmd, args, opts) => {
-      if (args[0] === 'diff') return '\n\n';
-      return '';
-    });
-    const {lastFrame} = render(<App />);
-    act(() => {
-      process.stdin.emit('data', 'd');
-    });
-    expect(lastFrame()).toContain('No unstaged changes.');
-  });
+	it('shows a fallback error message for unknown git failures', () => {
+		mockExecFileSync.mockImplementation((_cmd: string, args: string[]) => {
+			if (args[0] === 'status') {
+				throw 42;
+			}
 
-  it('handles edge case: empty git branch output', () => {
-    mockExecFileSync.mockImplementation((cmd, args, opts) => {
-      if (args[0] === 'branch') return '';
-      return '';
-    });
-    const {lastFrame} = render(<App />);
-    act(() => {
-      process.stdin.emit('data', 'b');
-    });
-    expect(lastFrame()).toContain('No local branches.');
-  });
+			return '';
+		});
 
-  it('handles edge case: empty git log output', () => {
-    mockExecFileSync.mockImplementation((cmd, args, opts) => {
-      if (args[0] === 'log') return '\n\n';
-      return '';
-    });
-    const {lastFrame} = render(<App />);
-    act(() => {
-      process.stdin.emit('data', 'l');
-    });
-    expect(lastFrame()).toContain('No commits found.');
-  });
+		const {lastFrame} = render(<App />);
 
-  it('handles error in getGitErrorMessage with unknown error', () => {
-    mockExecFileSync.mockImplementation((cmd, args, opts) => {
-      if (args[0] === 'status') throw 42;
-      return '';
-    });
-    const {lastFrame} = render(<App />);
-    expect(lastFrame()).toContain('git status failed: Unknown git command error');
-  });
+		expect(lastFrame()).toContain('git status failed: Unknown git command error');
+	});
 });

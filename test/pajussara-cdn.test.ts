@@ -1,76 +1,75 @@
-import {
-  DirectoryTextBrowser,
-  DirectoryTextBrowserWithStatusBar,
-  StatusBar,
-} from '../src/pajussara-cdn';
+import {jest} from '@jest/globals';
 import type {
-  DirectoryTextBrowserProps,
-  DirectoryTextBrowserPane,
-  DirectoryTextBrowserWithStatusBarProps,
-  StatusBarHint,
-  StatusBarProps,
-  TextListItem,
+	DirectoryTextBrowserPane,
+	DirectoryTextBrowserProps,
+	DirectoryTextBrowserWithStatusBarProps,
+	StatusBarHint,
+	StatusBarProps,
+	TextListItem
 } from '../src/pajussara-cdn';
+
+const directoryTextBrowserMock = function DirectoryTextBrowser() {
+	return null;
+};
+
+const directoryTextBrowserWithStatusBarMock = function DirectoryTextBrowserWithStatusBar() {
+	return null;
+};
+
+const statusBarMock = function StatusBar() {
+	return null;
+};
+
+jest.unstable_mockModule('#pajussara_tui_comp/DirectoryTextBrowser', () => ({
+	DirectoryTextBrowser: directoryTextBrowserMock
+}));
+
+jest.unstable_mockModule('#pajussara_tui_comp/DirectoryTextBrowserWithStatusBar', () => ({
+	DirectoryTextBrowserWithStatusBar: directoryTextBrowserWithStatusBarMock
+}));
+
+jest.unstable_mockModule('#pajussara_tui_comp/StatusBar', () => ({
+	StatusBar: statusBarMock
+}));
 
 describe('pajussara-cdn exports', () => {
-  it('should export DirectoryTextBrowser as a function or class', () => {
-    expect(DirectoryTextBrowser).toBeDefined();
-    expect(
-      typeof DirectoryTextBrowser === 'function' ||
-        typeof DirectoryTextBrowser === 'object'
-    ).toBe(true);
-  });
+	beforeEach(() => {
+		jest.resetModules();
+	});
 
-  it('should export DirectoryTextBrowserWithStatusBar as a function or class', () => {
-    expect(DirectoryTextBrowserWithStatusBar).toBeDefined();
-    expect(
-      typeof DirectoryTextBrowserWithStatusBar === 'function' ||
-        typeof DirectoryTextBrowserWithStatusBar === 'object'
-    ).toBe(true);
-  });
+	it('exports the expected runtime symbols', async () => {
+		const pajussaraCdn = await import('../src/pajussara-cdn');
 
-  it('should export StatusBar as a function or class', () => {
-    expect(StatusBar).toBeDefined();
-    expect(
-      typeof StatusBar === 'function' || typeof StatusBar === 'object'
-    ).toBe(true);
-  });
+		expect(pajussaraCdn.DirectoryTextBrowser).toBe(directoryTextBrowserMock);
+		expect(pajussaraCdn.DirectoryTextBrowserWithStatusBar).toBe(
+			directoryTextBrowserWithStatusBarMock
+		);
+		expect(pajussaraCdn.StatusBar).toBe(statusBarMock);
+	});
 
-  it('should allow usage of exported types without error', () => {
-    // These are compile-time checks; this test is for type import coverage
-    const props: DirectoryTextBrowserProps = {} as DirectoryTextBrowserProps;
-    const pane: DirectoryTextBrowserPane = {} as DirectoryTextBrowserPane;
-    const withStatusBarProps: DirectoryTextBrowserWithStatusBarProps =
-      {} as DirectoryTextBrowserWithStatusBarProps;
-    const statusBarHint: StatusBarHint = {} as StatusBarHint;
-    const statusBarProps: StatusBarProps = {} as StatusBarProps;
-    const textListItem: TextListItem = {} as TextListItem;
+	it('does not expose unexpected runtime exports', async () => {
+		const pajussaraCdn = await import('../src/pajussara-cdn');
 
-    expect(props).toBeDefined();
-    expect(pane).toBeDefined();
-    expect(withStatusBarProps).toBeDefined();
-    expect(statusBarHint).toBeDefined();
-    expect(statusBarProps).toBeDefined();
-    expect(textListItem).toBeDefined();
-  });
+		expect(Object.keys(pajussaraCdn).sort()).toEqual(
+			['DirectoryTextBrowser', 'DirectoryTextBrowserWithStatusBar', 'StatusBar'].sort()
+		);
+		expect('NotARealExport' in pajussaraCdn).toBe(false);
+	});
 
-  it('should throw when importing a non-existent export', () => {
-    // Simulate dynamic import error
-    expect(() => {
-      // @ts-expect-error
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { NotARealExport } = require('../src/pajussara-cdn');
-    }).toThrow();
-  });
+	it('allows the public type exports to be referenced', () => {
+		const props: DirectoryTextBrowserProps = {} as DirectoryTextBrowserProps;
+		const pane: DirectoryTextBrowserPane = {} as DirectoryTextBrowserPane;
+		const withStatusBarProps: DirectoryTextBrowserWithStatusBarProps =
+			{} as DirectoryTextBrowserWithStatusBarProps;
+		const statusBarHint: StatusBarHint = {} as StatusBarHint;
+		const statusBarProps: StatusBarProps = {} as StatusBarProps;
+		const textListItem: TextListItem = {} as TextListItem;
 
-  it('should not export any unexpected keys', () => {
-    const exportedKeys = Object.keys(require('../src/pajussara-cdn'));
-    expect(exportedKeys.sort()).toEqual(
-      [
-        'DirectoryTextBrowser',
-        'DirectoryTextBrowserWithStatusBar',
-        'StatusBar',
-      ].sort()
-    );
-  });
+		expect(props).toBeDefined();
+		expect(pane).toBeDefined();
+		expect(withStatusBarProps).toBeDefined();
+		expect(statusBarHint).toBeDefined();
+		expect(statusBarProps).toBeDefined();
+		expect(textListItem).toBeDefined();
+	});
 });

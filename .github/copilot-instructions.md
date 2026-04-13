@@ -5,11 +5,12 @@
 - Install dependencies with `npm install`.
 - Sync the upstream `pajussara_tui_comp` CDN files with `npm run sync:pajussara`.
 - Run the TUI in development with `npm run dev`.
+- Run the committed Jest suite with `npm test`.
 - Build the app with `npm run build`.
 - Run the built CLI with `npm run start`.
 - Type-check the project with `npm run typecheck`.
 
-Committed test files now exist under `test/`, but there is still no configured test runner, `npm test` script, or lint configuration yet. Do not invent those commands until the supporting tooling is added.
+There is now a committed Jest-based test workflow under `test/` exposed through `npm test`, but there is still no committed lint configuration yet. Do not invent lint commands until the supporting tooling is added.
 
 ## High-level architecture
 

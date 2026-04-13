@@ -7,8 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-04-12
+
 ### Added
 
 - Added workflow-facing project documentation in `ARCHITECTURE.md` and `FUNCTIONAL_REQUIREMENTS.md`.
 - Added `.workflow-config.yaml` so `ai_workflow.js` can execute with project-specific settings.
 - Added `.ai_workflow/` to `.gitignore` to keep generated workflow artifacts untracked.
+- Added a Jest-based `npm test` workflow for the committed suite under `test/`.
+- Added Jest configuration and test-only TypeScript configuration for the Ink app.
+
+### Changed
+
+- Updated the committed tests to run under the repository's ESM setup.
+- Updated README and project architecture/requirements guidance for the v1.1.0 validation workflow.

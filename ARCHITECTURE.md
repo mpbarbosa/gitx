@@ -4,6 +4,12 @@
 
 `gitx` is a Node.js ESM terminal UI built with TypeScript, React, and Ink. It presents a two-pane repository browser rooted at `/home/mpb/Documents/GitHub` and runs Git commands against the currently selected folder.
 
+## Versioning
+
+| Version | Milestone | Notes |
+|---------|-----------|-------|
+| 1.1.0 | Runnable committed test suite | Adds a Jest-based `npm test` workflow for the existing `test/` suite and documents the supported validation path. |
+
 The CLI bootstrap lives in `src/index.tsx`, which renders `App` from `src/app.tsx`. All user-facing behavior is implemented in React components under `src/`.
 
 ## Runtime Flow
@@ -44,12 +50,13 @@ The CLI bootstrap lives in `src/index.tsx`, which renders `App` from `src/app.ts
 - `vendor/pajussara_tui_comp/` is generated and should not be hand-edited.
 - `src/` contains application-specific logic and should remain the primary edit surface.
 - The selected directory is the execution context for all Git commands.
-- The project has committed test files under `test/`, but it still has no configured test runner, `npm test` script, or lint configuration.
+- The project has committed test files under `test/` and a Jest-based `npm test` workflow, but it still has no committed lint configuration.
 
 ## Build and Validation Surface
 
 - Install dependencies with `npm install`.
 - Sync generated vendor files with `npm run sync:pajussara`.
+- Run tests with `npm test`.
 - Run the TUI in development with `npm run dev`.
 - Build with `npm run build`.
 - Run the built CLI with `npm run start`.

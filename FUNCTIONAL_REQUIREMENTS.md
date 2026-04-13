@@ -4,6 +4,8 @@
 
 `gitx` provides an Ink-based terminal UI for browsing local repositories and inspecting Git state without leaving the terminal.
 
+**Current version:** 1.1.0
+
 ## Functional Scope
 
 ### Repository browsing
@@ -38,11 +40,11 @@
 - The codebase must remain compatible with Node.js ESM and TypeScript `NodeNext`.
 - Generated vendor files must be refreshed through `npm run sync:pajussara`, not hand-edited.
 - Application-specific behavior must remain in `src/`.
+- The committed test suite under `test/` must run through `npm test`.
 - The project must continue to build with `npm run build` and type-check with `npm run typecheck`.
 
 ## Current Gaps
 
-- Committed automated test files now exist under `test/`, but there is still no configured test runner or `npm test` script.
 - There is no committed lint configuration yet.
 - Workflow automation must treat those gaps as intentional current state rather than missing scripts to invent.
 

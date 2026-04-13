@@ -6,6 +6,7 @@ TypeScript Ink TUI app for Git commands with MCP.
 
 ```bash
 npm install
+npm test
 npm run dev
 ```
 
@@ -14,6 +15,7 @@ npm run dev
 ```bash
 npm run sync:pajussara
 npm run dev
+npm test
 npm run build
 npm run start
 npm run typecheck
@@ -27,4 +29,4 @@ This repository now includes `.workflow-config.yaml` plus the root documentation
 
 Repository automation metadata and project-specific Copilot guidance live under `.github/`.
 
-The workflow configuration intentionally disables test and lint execution stages because the repository still lacks a configured test runner, `npm test` script, and lint setup, even though committed test files now exist under `test/`. Build and type-check stages remain available through the existing npm scripts.
+The workflow configuration can now run the committed Jest-based test suite through `npm test`. Lint execution still remains disabled because the repository does not yet include a committed lint configuration.
