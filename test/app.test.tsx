@@ -259,6 +259,14 @@ describe('App', () => {
 		expect(lastFrame()).toContain('git status failed: Unknown git command error');
 	});
 
+	it('surfaces directory loading failures in the status area', async () => {
+		mockReaddir.mockRejectedValueOnce(new Error('permission denied'));
+
+		const {lastFrame} = await renderApp();
+
+		expect(lastFrame()).toContain('Failed to load directories: permission denied');
+	});
+
 	it('runs git fetch --prune when pressing r', async () => {
 		const instance = await renderApp();
 

@@ -24,6 +24,7 @@ type GitCommandStatus = 'idle' | 'loading' | 'done' | 'error';
 type GitTextView = 'status' | 'diff' | 'branch' | 'log';
 type GitLogOptionId = 'default' | 'oneline';
 type TextEntriesCache = Record<string, TextListItem[]>;
+type ExecGitError = Error & {stdout?: string; stderr?: string};
 
 function formatGitCommandLabel(args: readonly string[]): string {
 	return `git ${args.join(' ')}`;
@@ -33,19 +34,28 @@ function toUtf8Text(output: string | Buffer): string {
 	return typeof output === 'string' ? output : output.toString('utf8');
 }
 
+function getErrorMessage(error: unknown, fallbackMessage: string): string {
+	return error instanceof Error ? error.message : fallbackMessage;
+}
+
+function createExecGitError(
+	error: unknown,
+	stdout: string | Buffer,
+	stderr: string | Buffer
+): ExecGitError {
+	const execError: ExecGitError =
+		error instanceof Error ? error : new Error(getErrorMessage(error, 'Unknown git command error'));
+
+	execError.stdout = toUtf8Text(stdout);
+	execError.stderr = toUtf8Text(stderr);
+	return execError;
+}
+
 function execGit(args: readonly string[], cwd: string): Promise<string> {
 	return new Promise((resolve, reject) => {
 		execFile('git', [...args], {cwd, encoding: 'utf8'}, (error, stdout, stderr) => {
 			if (error) {
-				if (typeof error === 'object' && error !== null) {
-					const execError = error as Error & {stdout?: string; stderr?: string};
-					execError.stdout = toUtf8Text(stdout);
-					execError.stderr = toUtf8Text(stderr);
-					reject(execError);
-					return;
-				}
-
-				reject(error);
+				reject(createExecGitError(error, stdout, stderr));
 				return;
 			}
 
@@ -89,16 +99,12 @@ function getGitLogOptionHints(selectedOptionId: GitLogOptionId): StatusBarHint[]
 }
 
 async function getChildDirectories(directoryPath: string): Promise<string[]> {
-	try {
-		const entries = await readdir(directoryPath, {withFileTypes: true});
+	const entries = await readdir(directoryPath, {withFileTypes: true});
 
-		return entries
-			.filter((entry) => entry.isDirectory())
-			.map((entry) => join(directoryPath, entry.name))
-			.sort((left, right) => left.localeCompare(right));
-	} catch {
-		return [];
-	}
+	return entries
+		.filter((entry) => entry.isDirectory())
+		.map((entry) => join(directoryPath, entry.name))
+		.sort((left, right) => left.localeCompare(right));
 }
 
 function getStatusFromLine(line: string): TextListItem['status'] {
@@ -124,10 +130,13 @@ function getGitErrorMessage(error: unknown): string {
 		'stderr' in error &&
 		(typeof error.stderr === 'string' || Buffer.isBuffer(error.stderr))
 	) {
-		return error.stderr.toString().trim();
+		const stderrMessage = error.stderr.toString().trim();
+		if (stderrMessage.length > 0) {
+			return stderrMessage;
+		}
 	}
 
-	return error instanceof Error ? error.message : 'Unknown git command error';
+	return getErrorMessage(error, 'Unknown git command error');
 }
 
 async function getGitStatusEntries(directoryPath: string | null): Promise<TextListItem[]> {
@@ -455,13 +464,26 @@ export function App() {
 	useEffect(() => {
 		let isDisposed = false;
 
-		void getChildDirectories(rootDirectory).then((childDirectories) => {
-			if (isDisposed) {
-				return;
-			}
+		void getChildDirectories(rootDirectory)
+			.then((childDirectories) => {
+				if (isDisposed) {
+					return;
+				}
 
-			setSelectedDirectoryPath((currentDirectoryPath) => currentDirectoryPath ?? childDirectories[0] ?? null);
-		});
+				setGitCommandErrorMessage(null);
+				setSelectedDirectoryPath(
+					(currentDirectoryPath) => currentDirectoryPath ?? childDirectories[0] ?? null
+				);
+			})
+			.catch((error) => {
+				if (isDisposed) {
+					return;
+				}
+
+				setGitCommandErrorMessage(
+					`Failed to load directories: ${getErrorMessage(error, 'Unknown directory read error')}`
+				);
+			});
 
 		return () => {
 			isDisposed = true;
