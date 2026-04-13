@@ -8,7 +8,7 @@
 
 | Version | Milestone | Notes |
 | --- | --- | --- |
-| 1.3.0 | Command feedback in the status bar | Adds explicit per-command feedback for `git fetch --prune`, `git pull`, and `git push`, and clears stale command state when the user changes context. |
+| 1.3.1 | Command feedback in the status bar | Adds explicit per-command feedback for `git fetch --prune`, `git pull`, and `git push`, and clears stale command state when the user changes context. |
 | 1.2.0 | Explicit Git refresh action | Replaces the implicit fetch during status rendering with an explicit `[r]` refresh action that runs `git fetch --prune` against the selected repository. |
 | 1.1.10 | Runnable committed test suite | Adds a Jest-based `npm test` workflow for the existing `test/` suite and documents the supported validation path. |
 
