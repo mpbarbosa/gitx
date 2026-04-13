@@ -40,4 +40,9 @@ async function syncFile(relativePath) {
 	await writeFile(targetPath, await response.text(), 'utf8');
 }
 
-await Promise.all(mirroredFiles.map(syncFile));
+try {
+	await Promise.all(mirroredFiles.map(syncFile));
+} catch (error) {
+	console.error('Failed to sync pajussara_tui_comp files:', error);
+	process.exit(1);
+}

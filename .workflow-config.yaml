@@ -5,7 +5,7 @@ project:
   name: "gitx"
   type: "typescript-application"
   kind: "nodejs_automation"
-  version: "1.0.2"
+  version: "1.1.1"
   description: "Ink-based TypeScript terminal UI for browsing local Git repositories and running folder-scoped Git commands"
 
 tech_stack:
@@ -15,7 +15,7 @@ tech_stack:
   build_system: "npm"
   runtime: "node"
   ui_framework: "ink"
-  test_framework: "none"
+  test_framework: "jest"
   lint_command: "none"
 
 structure:
@@ -27,6 +27,8 @@ structure:
     - ARCHITECTURE.md
     - FUNCTIONAL_REQUIREMENTS.md
     - CHANGELOG.md
+    - .github/copilot-instructions.md
+  test_dirs: [test]
 
 version:
   config_files:
@@ -40,11 +42,11 @@ ai_personas:
     - architecture_reviewer
     - devops_engineer
     - dependency_analyst
+    - test_engineer
     - git_specialist
     - async_performance_engineer
     - performance_engineer
   disabled:
-    - test_engineer
     - code_quality_analyst
     - prompt_engineer
     - ux_analyst
@@ -68,10 +70,10 @@ workflow:
       steps: [step_00, step_01, step_02, step_03, step_04]
     medium:
       enabled: true
-      steps: [step_00, step_0b, step_01, step_02, step_02_5, step_03, step_04, step_05, step_09, step_13, step_19, step_20, step_23, step_11]
+      steps: [step_00, step_0b, step_01, step_02, step_02_5, step_03, step_04, step_05, step_06, step_07, step_08, step_09, step_13, step_19, step_20, step_23, step_11]
     full:
       enabled: true
-      steps: [step_00, step_0b, step_01, step_02, step_02_5, step_03, step_04, step_05, step_09, step_13, step_19, step_20, step_23, step_11, step_16, step_17, step_0f, step_12]
+      steps: [step_00, step_0b, step_01, step_02, step_02_5, step_03, step_04, step_05, step_06, step_07, step_08, step_09, step_13, step_19, step_20, step_23, step_11, step_16, step_17, step_0f, step_12]
 
   steps:
     - id: step_00
@@ -159,8 +161,7 @@ workflow:
       file: "step_06.js"
       description: "Review committed automated test coverage"
       phase: 2
-      enabled: false
-      reason: "This project does not yet include a committed automated test suite."
+      enabled: true
       can_parallelize: false
       dependencies: [step_05]
       ai_persona: test_engineer
@@ -170,8 +171,7 @@ workflow:
       file: "step_07.js"
       description: "Generate missing tests"
       phase: 2
-      enabled: false
-      reason: "No test runner or baseline test harness is committed in this repository."
+      enabled: true
       can_parallelize: false
       dependencies: [step_06]
       ai_persona: test_engineer
@@ -181,8 +181,7 @@ workflow:
       file: "step_08.js"
       description: "Execute the automated test suite"
       phase: 2
-      enabled: false
-      reason: "The repository has no npm test command or committed test suite yet."
+      enabled: true
       can_parallelize: false
       dependencies: [step_07]
       ai_persona: test_engineer
@@ -314,7 +313,7 @@ validation:
     required: true
     min_coverage: 70
   testing:
-    required: false
+    required: true
 
 linting:
   md_linter: "none"

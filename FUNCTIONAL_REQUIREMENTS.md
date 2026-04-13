@@ -58,3 +58,5 @@
 | RI-001 | step_05 | Documented the `.github` directory in the main project docs. | README.md | Low | done |
 | RI-002 | step_13 | Removed the markdown list-indentation violation in the requirements doc. | FUNCTIONAL_REQUIREMENTS.md | Low | done |
 | RI-003 | step_02 | Updated stale documentation that claimed the repo had no committed test suite. | README.md, ARCHITECTURE.md, FUNCTIONAL_REQUIREMENTS.md, .github/copilot-instructions.md | Medium | done |
+| RI-004 | step_02 | Refreshed `.workflow-config.yaml` so workflow metadata, docs roots, and test execution settings match the live repository. | .workflow-config.yaml | Medium | done |
+| RI-005 | step_20 | Added explicit top-level failure handling to the pajussara CDN sync script. | scripts/sync-pajussara-cdn.mjs | Medium | done |
