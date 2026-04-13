@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.6/),
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.7/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
@@ -17,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Tightened the workflow-facing documentation analysis guidance so `step_02` stays anchored to the markdown files actually in scope.
 - Aligned the workflow-facing docs with the live `DirectoryTextBrowserWithStatusBar` UI and documented the `git pull` / `git push` shortcuts in `README.md`.
 
-## [1.1.6] - 2026-04-12
+## [1.1.7] - 2026-04-12
 
 ### Added
 
@@ -30,4 +30,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Updated the committed tests to run under the repository's ESM setup.
-- Updated README and project architecture/requirements guidance for the v1.1.6 validation workflow.
+- Updated README and project architecture/requirements guidance for the v1.1.7 validation workflow.
