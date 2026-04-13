@@ -7,15 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-04-13
+
 ### Added
 
+- Added contextual status-bar feedback for `git fetch --prune`, `git pull`, and `git push` so the active or last Git action remains visible.
+
+### Changed
+
+- Clear stale command feedback when switching repositories or text views so the primary status bar reflects the current context.
+
+## [1.2.0] - 2026-04-13
+
+### Added
+
+- Added an explicit `[r]` shortcut that runs `git fetch --prune` for the selected repository.
 - Added ESLint and markdownlint-cli2 configuration with `npm run lint`, `npm run lint:js`, and `npm run lint:md`.
 - Added a GitHub Actions CI workflow that runs linting, tests, build, and type-check validation.
 
 ### Changed
 
+- Removed the implicit fetch side effect from the default `git status` view so switching views no longer performs network work automatically.
 - Tightened the workflow-facing documentation analysis guidance so `step_02` stays anchored to the markdown files actually in scope.
-- Aligned the workflow-facing docs with the live `DirectoryTextBrowserWithStatusBar` UI and documented the `git pull` / `git push` shortcuts in `README.md`.
+- Aligned the workflow-facing docs with the live `DirectoryTextBrowserWithStatusBar` UI and documented the `git fetch --prune`, `git pull`, and `git push` shortcuts in `README.md`.
 
 ## [1.1.10] - 2026-04-12
 

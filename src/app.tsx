@@ -14,6 +14,7 @@ const primaryStatusBarHints = [
 	{key: 'Tab', label: 'Focus'},
 	{key: '↑/↓ j/k', label: 'Move'},
 	{key: 'PgUp/PgDn', label: 'Page'},
+	{key: 'r', label: 'git fetch --prune'},
 	{key: 's', label: 'git status'},
 	{key: 'd', label: 'git diff'},
 	{key: 'b', label: 'git branch'},
@@ -24,6 +25,10 @@ const primaryStatusBarHints = [
 type GitCommandStatus = 'idle' | 'loading' | 'done' | 'error';
 type GitTextView = 'status' | 'diff' | 'branch' | 'log';
 type GitLogOptionId = 'default' | 'oneline';
+
+function formatGitCommandLabel(args: readonly string[]): string {
+	return `git ${args.join(' ')}`;
+}
 
 const gitLogOptions = {
 	default: {
@@ -107,7 +112,6 @@ function getGitStatusEntries(directoryPath: string | null): TextListItem[] {
 	}
 
 	try {
-		execFileSync('git', ['fetch'], {cwd: directoryPath, encoding: 'utf8'});
 		const output = execFileSync('git', ['status', '--short', '--branch'], {
 			cwd: directoryPath,
 			encoding: 'utf8'
@@ -387,6 +391,7 @@ export function App() {
 	const [activeTextView, setActiveTextView] = useState<GitTextView>('status');
 	const [focusedPane, setFocusedPane] = useState<DirectoryTextBrowserPane>('directories');
 	const [gitCommandStatus, setGitCommandStatus] = useState<GitCommandStatus>('idle');
+	const [gitCommandLabel, setGitCommandLabel] = useState<string | null>(null);
 	const [gitCommandErrorMessage, setGitCommandErrorMessage] = useState<string | null>(null);
 	const [directoryRefreshVersion, setDirectoryRefreshVersion] = useState(0);
 	const [activeGitLogOptionId, setActiveGitLogOptionId] = useState<GitLogOptionId>('default');
@@ -451,6 +456,7 @@ export function App() {
 		setSelectedTextItemId(null);
 		setFocusedPane('directories');
 		setGitCommandStatus('idle');
+		setGitCommandLabel(null);
 		setGitCommandErrorMessage(null);
 		setIsGitLogHintBarOpen(false);
 	}, []);
@@ -463,7 +469,8 @@ export function App() {
 			setActiveTextView(nextTextView);
 			setSelectedTextItemId(null);
 			setFocusedPane('text');
-			setGitCommandStatus('done');
+			setGitCommandStatus('idle');
+			setGitCommandLabel(null);
 			setGitCommandErrorMessage(null);
 			setDirectoryRefreshVersion((currentVersion) => currentVersion + 1);
 		},
@@ -475,7 +482,9 @@ export function App() {
 				return;
 			}
 
+			const commandLabel = formatGitCommandLabel(args);
 			setGitCommandStatus('loading');
+			setGitCommandLabel(commandLabel);
 			setGitCommandErrorMessage(null);
 
 			try {
@@ -495,6 +504,9 @@ export function App() {
 	);
 	const handleGitPull = useCallback(async () => {
 		await runGitCommand(['pull']);
+	}, [runGitCommand]);
+	const handleGitRefresh = useCallback(async () => {
+		await runGitCommand(['fetch', '--prune']);
 	}, [runGitCommand]);
 	const handleGitDiff = useCallback(() => {
 		showTextView('diff');
@@ -551,12 +563,26 @@ export function App() {
 				: activeTextView === 'log'
 					? `git log${activeGitLogOption.titleSuffix} returned no lines for this folder.`
 				: 'git status returned no lines for this folder.';
+	const primaryCommandStatusBarHints = useMemo(() => {
+		if (!gitCommandLabel || gitCommandStatus === 'idle') {
+			return primaryStatusBarHints;
+		}
+
+		const commandStateHint =
+			gitCommandStatus === 'loading'
+				? {key: 'Run', label: gitCommandLabel}
+				: gitCommandStatus === 'done'
+					? {key: 'Done', label: gitCommandLabel}
+					: {key: 'Fail', label: gitCommandLabel};
+
+		return [commandStateHint, ...primaryStatusBarHints];
+	}, [gitCommandLabel, gitCommandStatus]);
 	const secondaryStatusBarHints = useMemo(
 		() => getGitLogOptionHints(selectedGitLogOptionId),
 		[selectedGitLogOptionId]
 	);
 
-	useInput((input, key) => {
+	const handleInput = useCallback((input: string, key: {return?: boolean; escape?: boolean; leftArrow?: boolean; rightArrow?: boolean; upArrow?: boolean; downArrow?: boolean; pageDown?: boolean; pageUp?: boolean; home?: boolean; end?: boolean}) => {
 		if (isGitLogHintBarOpen) {
 			if (key.return) {
 				handleConfirmGitLogOption();
@@ -598,6 +624,11 @@ export function App() {
 
 		if (input === 'p') {
 			void handleGitPull();
+			return;
+		}
+
+		if (input === 'r') {
+			void handleGitRefresh();
 			return;
 		}
 
@@ -646,7 +677,9 @@ export function App() {
 		if (input === 'x') {
 			void handleGitPush();
 		}
-	});
+	}, [exit, focusedPane, handleCloseGitLogHintBar, handleConfirmGitLogOption, handleGitBranch, handleGitDiff, handleGitLog, handleGitPull, handleGitPush, handleGitRefresh, handleGitStatus, handleSelectGitLogOption, isGitLogHintBarOpen, moveTextSelection, selectTextItemAtIndex, textItems.length, textPageSize]);
+
+	useInput(handleInput);
 
 	return (
 		<Box flexDirection="column" paddingX={1} paddingY={1} gap={1}>
@@ -680,7 +713,7 @@ export function App() {
 				textPlaceholderText={textPlaceholderText}
 				textEmptyText={textEmptyText}
 				statusBarProps={{
-					hints: primaryStatusBarHints,
+					hints: primaryCommandStatusBarHints,
 					status: gitCommandStatus,
 					errorMessage: gitCommandErrorMessage
 				}}

@@ -4,7 +4,7 @@
 
 `gitx` provides an Ink-based terminal UI for browsing local repositories and inspecting Git state without leaving the terminal.
 
-**Current version:** 1.1.10
+**Current version:** 1.3.0
 
 ## Functional Scope
 
@@ -16,6 +16,7 @@
 ### Git status view
 
 - The default right-pane view must show `git status --short --branch` for the selected directory.
+- Rendering the default status view must not trigger a remote fetch automatically.
 - If the selected directory is not a Git repository, the UI must show an informational message instead of crashing.
 
 ### Alternate Git views
@@ -25,15 +26,18 @@
 
 ### Command execution
 
+- `git fetch --prune` must execute on demand against the selected directory.
 - `git pull` and `git push` must execute against the selected directory.
+- Running, successful, and failed fetch/pull/push actions must expose contextual command feedback in the primary status bar.
 - Command failures must surface a readable error message in the status bar.
 - Git commands must use the selected directory as the working directory.
 
 ### Keyboard interaction
 
 - The UI must support keyboard navigation for directory selection and text-pane paging.
-- The primary shortcuts must include `q`, `Tab`, `s`, `d`, `b`, `l`, `p`, and `x`.
+- The primary shortcuts must include `q`, `Tab`, `r`, `s`, `d`, `b`, `l`, `p`, and `x`.
 - The Git log submenu must support `1`, `2`, arrow keys, `Enter`, and `Esc`.
+- Switching repositories or text views must clear stale command-feedback state from earlier Git actions.
 
 ## Non-Functional Requirements
 

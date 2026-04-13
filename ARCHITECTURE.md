@@ -8,6 +8,8 @@
 
 | Version | Milestone | Notes |
 | --- | --- | --- |
+| 1.3.0 | Command feedback in the status bar | Adds explicit per-command feedback for `git fetch --prune`, `git pull`, and `git push`, and clears stale command state when the user changes context. |
+| 1.2.0 | Explicit Git refresh action | Replaces the implicit fetch during status rendering with an explicit `[r]` refresh action that runs `git fetch --prune` against the selected repository. |
 | 1.1.10 | Runnable committed test suite | Adds a Jest-based `npm test` workflow for the existing `test/` suite and documents the supported validation path. |
 
 The CLI bootstrap lives in `src/index.tsx`, which renders `App` from `src/app.tsx`. All user-facing behavior is implemented in React components under `src/`.
@@ -33,7 +35,9 @@ The CLI bootstrap lives in `src/index.tsx`, which renders `App` from `src/app.ts
 - Owns the TUI state, keyboard handling, and Git command execution.
 - Computes dynamic pane sizes from the terminal dimensions.
 - Maps Git output into `TextListItem` entries for the right pane.
-- Supports `git status`, `git diff`, `git branch`, `git log`, `git pull`, and `git push`.
+- Supports `git status`, `git diff`, `git branch`, `git log`, `git fetch --prune`, `git pull`, and `git push`.
+- Keeps the status view side-effect free by separating remote refresh from status rendering.
+- Tracks the currently running or last completed Git action so the status bar can show contextual command feedback.
 
 ### `src/pajussara-cdn.*`
 
