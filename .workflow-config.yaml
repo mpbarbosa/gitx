@@ -5,7 +5,7 @@ project:
   name: "gitx"
   type: "typescript-application"
   kind: "nodejs_automation"
-  version: "1.1.4"
+  version: "1.1.5"
   description: "Ink-based TypeScript terminal UI for browsing local Git repositories and running folder-scoped Git commands"
 
 tech_stack:
@@ -25,13 +25,12 @@ tech_stack:
 structure:
   source_dirs:
     - src
-  docs_dirs: [docs]
+  docs_dirs: []
   key_docs:
     - README.md
     - ARCHITECTURE.md
     - FUNCTIONAL_REQUIREMENTS.md
     - CHANGELOG.md
-    - FLOWCHART.md
     - .github/copilot-instructions.md
   test_dirs: [test]
 

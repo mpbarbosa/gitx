@@ -4,7 +4,7 @@
 
 `gitx` provides an Ink-based terminal UI for browsing local repositories and inspecting Git state without leaving the terminal.
 
-**Current version:** 1.1.4
+**Current version:** 1.1.5
 
 ## Functional Scope
 
@@ -44,10 +44,6 @@
 - The committed test suite under `test/` must run through `npm test`.
 - The project must continue to build with `npm run build` and type-check with `npm run typecheck`.
 
-## Current Gaps
-
-- Root documentation still lives at the repository root even though workflow metadata also names `docs/` as a documentation directory.
-
 ## Roadmap — Minor Issues
 
 > Populated by the `fix-log-issues` skill. Each item was verified against the
@@ -60,3 +56,4 @@
 | RI-003 | step_02 | Updated stale documentation that claimed the repo had no committed test suite. | README.md, ARCHITECTURE.md, FUNCTIONAL_REQUIREMENTS.md, .github/copilot-instructions.md | Medium | done |
 | RI-004 | step_02 | Refreshed `.workflow-config.yaml` so workflow metadata, docs roots, and test execution settings match the live repository. | .workflow-config.yaml | Medium | done |
 | RI-005 | step_20 | Added explicit top-level failure handling to the pajussara CDN sync script. | scripts/sync-pajussara-cdn.mjs | Medium | done |
+| RI-006 | step_05 | Removed stale workflow metadata that pointed at a nonexistent `docs/` root and `FLOWCHART.md`. | .workflow-config.yaml, FUNCTIONAL_REQUIREMENTS.md | Medium | done |
