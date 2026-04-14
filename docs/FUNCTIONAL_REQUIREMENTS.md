@@ -4,7 +4,7 @@
 
 `gitx` provides an Ink-based terminal UI for browsing local repositories and inspecting Git state without leaving the terminal.
 
-**Current version:** 1.3.2
+**Current version:** 1.3.3
 
 ## Functional Scope
 
