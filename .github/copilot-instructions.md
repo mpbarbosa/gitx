@@ -5,10 +5,16 @@
 - Install dependencies with `npm install`.
 - Sync the upstream `pajussara_tui_comp` CDN files with `npm run sync:pajussara`.
 - Run the TUI in development with `npm run dev`.
+- Refresh the lockfile with `npm run lockfile:sync`.
+- Check lockfile drift with `npm run lockfile:sync-check`.
+- Lint the lockfile with `npm run lockfile:lint`.
+- Format the repository with `npm run format`.
+- Check formatting with `npm run format:check`.
 - Lint the codebase with `npm run lint`.
 - Lint JavaScript/TypeScript with `npm run lint:js`.
 - Lint Markdown with `npm run lint:md`.
 - Run the committed Jest suite with `npm test`.
+- Collect Jest coverage with `npm run test:coverage`.
 - Build the app with `npm run build`.
 - Run the built CLI with `npm run start`.
 - Type-check the project with `npm run typecheck`.

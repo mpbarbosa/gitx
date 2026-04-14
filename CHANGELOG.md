@@ -7,7 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.3.3] - 2026-04-13
+### Added
+
+- Added Prettier-based repository formatting with `npm run format` and `npm run format:check`.
+- Added JSDoc comments across the main source modules and the pajussara CDN sync script.
+- Added a dedicated `npm run test:coverage` command and expanded Jest coverage for the Git/TUI helpers.
+- Added lockfile drift and lockfile-lint commands plus CI enforcement for the committed npm lockfile.
+
+### Changed
+
+- Updated workflow metadata and contributor guidance to include the formatter commands and current documentation layout.
+- Documented the repository dependency update policy in `README.md`.
+
+## [1.3.4] - 2026-04-13
 
 ### Added
 

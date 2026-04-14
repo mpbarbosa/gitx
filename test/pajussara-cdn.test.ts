@@ -12,9 +12,10 @@ const directoryTextBrowserMock = function DirectoryTextBrowser() {
 	return null;
 };
 
-const directoryTextBrowserWithStatusBarMock = function DirectoryTextBrowserWithStatusBar() {
-	return null;
-};
+const directoryTextBrowserWithStatusBarMock =
+	function DirectoryTextBrowserWithStatusBar() {
+		return null;
+	};
 
 const statusBarMock = function StatusBar() {
 	return null;
@@ -24,9 +25,12 @@ jest.unstable_mockModule('#pajussara_tui_comp/DirectoryTextBrowser', () => ({
 	DirectoryTextBrowser: directoryTextBrowserMock
 }));
 
-jest.unstable_mockModule('#pajussara_tui_comp/DirectoryTextBrowserWithStatusBar', () => ({
-	DirectoryTextBrowserWithStatusBar: directoryTextBrowserWithStatusBarMock
-}));
+jest.unstable_mockModule(
+	'#pajussara_tui_comp/DirectoryTextBrowserWithStatusBar',
+	() => ({
+		DirectoryTextBrowserWithStatusBar: directoryTextBrowserWithStatusBarMock
+	})
+);
 
 jest.unstable_mockModule('#pajussara_tui_comp/StatusBar', () => ({
 	StatusBar: statusBarMock
@@ -51,7 +55,11 @@ describe('pajussara-cdn exports', () => {
 		const pajussaraCdn = await import('../src/pajussara-cdn');
 
 		expect(Object.keys(pajussaraCdn).sort()).toEqual(
-			['DirectoryTextBrowser', 'DirectoryTextBrowserWithStatusBar', 'StatusBar'].sort()
+			[
+				'DirectoryTextBrowser',
+				'DirectoryTextBrowserWithStatusBar',
+				'StatusBar'
+			].sort()
 		);
 		expect('NotARealExport' in pajussaraCdn).toBe(false);
 	});

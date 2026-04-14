@@ -2,34 +2,38 @@
 # Project: gitx
 
 project:
-  name: "gitx"
-  type: "typescript-application"
-  kind: "nodejs_automation"
-  version: "1.1.10"
-  description: "Ink-based TypeScript terminal UI for browsing local Git repositories and running folder-scoped Git commands"
+  name: 'gitx'
+  type: 'typescript-application'
+  kind: 'nodejs_automation'
+  version: '1.3.4'
+  description: 'Ink-based TypeScript terminal UI for browsing local Git repositories and running folder-scoped Git commands'
 
 tech_stack:
-  primary_language: "typescript"
+  primary_language: 'typescript'
   secondary_languages:
-    - "javascript"
-  build_system: "npm"
-  runtime: "node"
-  ui_framework: "ink"
-  test_framework: "jest"
-  lint_command: "npm run lint"
+    - 'javascript'
+  build_system: 'npm'
+  runtime: 'node'
+  ui_framework: 'ink'
+  test_framework: 'jest'
+  formatter: 'prettier'
+  format_command: 'npm run format'
+  format_check_command: 'npm run format:check'
+  lint_command: 'npm run lint'
   lint_commands:
-    javascript: "npm run lint:js"
-    typescript: "npm run lint:js"
-    markdown: "npm run lint:md"
+    javascript: 'npm run lint:js'
+    typescript: 'npm run lint:js'
+    markdown: 'npm run lint:md'
 
 structure:
   source_dirs:
     - src
-  docs_dirs: []
+  docs_dirs:
+    - docs
   key_docs:
     - README.md
-    - ARCHITECTURE.md
-    - FUNCTIONAL_REQUIREMENTS.md
+    - docs/ARCHITECTURE.md
+    - docs/FUNCTIONAL_REQUIREMENTS.md
     - CHANGELOG.md
     - .github/copilot-instructions.md
   test_dirs: [test]
@@ -74,16 +78,58 @@ workflow:
       steps: [step_00, step_01, step_02, step_03, step_04]
     medium:
       enabled: true
-      steps: [step_00, step_0b, step_01, step_02, step_02_5, step_03, step_04, step_05, step_06, step_07, step_08, step_09, step_13, step_19, step_20, step_23, step_11]
+      steps:
+        [
+          step_00,
+          step_0b,
+          step_01,
+          step_02,
+          step_02_5,
+          step_03,
+          step_04,
+          step_05,
+          step_06,
+          step_07,
+          step_08,
+          step_09,
+          step_13,
+          step_19,
+          step_20,
+          step_23,
+          step_11
+        ]
     full:
       enabled: true
-      steps: [step_00, step_0b, step_01, step_02, step_02_5, step_03, step_04, step_05, step_06, step_07, step_08, step_09, step_13, step_19, step_20, step_23, step_11, step_16, step_17, step_0f, step_12]
+      steps:
+        [
+          step_00,
+          step_0b,
+          step_01,
+          step_02,
+          step_02_5,
+          step_03,
+          step_04,
+          step_05,
+          step_06,
+          step_07,
+          step_08,
+          step_09,
+          step_13,
+          step_19,
+          step_20,
+          step_23,
+          step_11,
+          step_16,
+          step_17,
+          step_0f,
+          step_12
+        ]
 
   steps:
     - id: step_00
-      name: "Pre-Analysis"
-      file: "step_00.js"
-      description: "Analyze the TUI project structure, Git command surfaces, and current workflow scope"
+      name: 'Pre-Analysis'
+      file: 'step_00.js'
+      description: 'Analyze the TUI project structure, Git command surfaces, and current workflow scope'
       phase: 1
       enabled: true
       can_parallelize: false
@@ -91,9 +137,9 @@ workflow:
       ai_persona: architecture_reviewer
 
     - id: step_0b
-      name: "Bootstrap Documentation"
-      file: "step_0b.js"
-      description: "Bootstrap project documentation for internal contributors and workflow agents"
+      name: 'Bootstrap Documentation'
+      file: 'step_0b.js'
+      description: 'Bootstrap project documentation for internal contributors and workflow agents'
       phase: 1
       enabled: true
       can_parallelize: false
@@ -101,9 +147,9 @@ workflow:
       ai_persona: technical_writer
 
     - id: step_01
-      name: "Documentation Updates"
-      file: "step_01.js"
-      description: "Review and update README, ARCHITECTURE, FUNCTIONAL_REQUIREMENTS, and CHANGELOG"
+      name: 'Documentation Updates'
+      file: 'step_01.js'
+      description: 'Review and update README, ARCHITECTURE, FUNCTIONAL_REQUIREMENTS, and CHANGELOG'
       phase: 1
       enabled: true
       can_parallelize: true
@@ -111,9 +157,9 @@ workflow:
       ai_persona: documentation_expert
 
     - id: step_02
-      name: "Consistency Analysis"
-      file: "step_02.js"
-      description: "Check consistency across the in-scope markdown documentation batch and treat package, script, or source parity as inconclusive unless those files are explicitly in context"
+      name: 'Consistency Analysis'
+      file: 'step_02.js'
+      description: 'Check consistency across the in-scope markdown documentation batch and treat package, script, or source parity as inconclusive unless those files are explicitly in context'
       phase: 1
       enabled: true
       can_parallelize: true
@@ -121,9 +167,9 @@ workflow:
       ai_persona: documentation_expert
 
     - id: step_02_5
-      name: "Documentation Optimization"
-      file: "step_02_5.js"
-      description: "Consolidate and refine workflow-facing project documentation"
+      name: 'Documentation Optimization'
+      file: 'step_02_5.js'
+      description: 'Consolidate and refine workflow-facing project documentation'
       phase: 1
       enabled: true
       can_parallelize: true
@@ -131,9 +177,9 @@ workflow:
       ai_persona: technical_writer
 
     - id: step_03
-      name: "Script References"
-      file: "step_03.js"
-      description: "Validate npm script references for install, vendor sync, build, start, and typecheck"
+      name: 'Script References'
+      file: 'step_03.js'
+      description: 'Validate npm script references for install, vendor sync, formatting, build, start, and typecheck'
       phase: 1
       enabled: true
       can_parallelize: true
@@ -141,9 +187,9 @@ workflow:
       ai_persona: devops_engineer
 
     - id: step_04
-      name: "Config Validation"
-      file: "step_04.js"
-      description: "Validate package.json, tsconfig.json, and ESM/TypeScript runtime configuration"
+      name: 'Config Validation'
+      file: 'step_04.js'
+      description: 'Validate package.json, tsconfig.json, and ESM/TypeScript runtime configuration'
       phase: 1
       enabled: true
       can_parallelize: true
@@ -151,9 +197,9 @@ workflow:
       ai_persona: devops_engineer
 
     - id: step_05
-      name: "Directory Structure"
-      file: "step_05.js"
-      description: "Validate src/ layout, generated vendor boundaries, and root documentation structure"
+      name: 'Directory Structure'
+      file: 'step_05.js'
+      description: 'Validate src/ layout, generated vendor boundaries, and the current documentation structure'
       phase: 1
       enabled: true
       can_parallelize: false
@@ -161,9 +207,9 @@ workflow:
       ai_persona: architecture_reviewer
 
     - id: step_06
-      name: "Test Review"
-      file: "step_06.js"
-      description: "Review committed automated test coverage"
+      name: 'Test Review'
+      file: 'step_06.js'
+      description: 'Review committed automated test coverage'
       phase: 2
       enabled: true
       can_parallelize: false
@@ -171,9 +217,9 @@ workflow:
       ai_persona: test_engineer
 
     - id: step_07
-      name: "Test Generation"
-      file: "step_07.js"
-      description: "Generate missing tests"
+      name: 'Test Generation'
+      file: 'step_07.js'
+      description: 'Generate missing tests'
       phase: 2
       enabled: true
       can_parallelize: false
@@ -181,9 +227,9 @@ workflow:
       ai_persona: test_engineer
 
     - id: step_08
-      name: "Test Execution"
-      file: "step_08.js"
-      description: "Execute the automated test suite"
+      name: 'Test Execution'
+      file: 'step_08.js'
+      description: 'Execute the automated test suite'
       phase: 2
       enabled: true
       can_parallelize: false
@@ -191,9 +237,9 @@ workflow:
       ai_persona: test_engineer
 
     - id: step_09
-      name: "Dependency Analysis"
-      file: "step_09.js"
-      description: "Audit Node.js, Ink, React, and TypeScript dependency usage"
+      name: 'Dependency Analysis'
+      file: 'step_09.js'
+      description: 'Audit Node.js, Ink, React, and TypeScript dependency usage'
       phase: 2
       enabled: true
       can_parallelize: true
@@ -201,9 +247,9 @@ workflow:
       ai_persona: dependency_analyst
 
     - id: step_10
-      name: "Code Quality"
-      file: "step_10.js"
-      description: "Run configured lint and code quality checks"
+      name: 'Code Quality'
+      file: 'step_10.js'
+      description: 'Run configured formatting, lint, and code quality checks'
       phase: 2
       enabled: true
       can_parallelize: true
@@ -211,9 +257,9 @@ workflow:
       ai_persona: code_quality_analyst
 
     - id: step_13
-      name: "Markdown Lint"
-      file: "step_13.js"
-      description: "Review markdown documentation quality using project markdown conventions"
+      name: 'Markdown Lint'
+      file: 'step_13.js'
+      description: 'Review markdown documentation quality using project markdown conventions'
       phase: 2
       enabled: true
       can_parallelize: true
@@ -221,9 +267,9 @@ workflow:
       ai_persona: technical_writer
 
     - id: step_19
-      name: "TypeScript Review"
-      file: "step_19.js"
-      description: "Review TypeScript and Ink patterns, ESM imports, and runtime compatibility"
+      name: 'TypeScript Review'
+      file: 'step_19.js'
+      description: 'Review TypeScript and Ink patterns, ESM imports, and runtime compatibility'
       phase: 2
       enabled: true
       can_parallelize: true
@@ -231,9 +277,9 @@ workflow:
       ai_persona: typescript_reviewer
 
     - id: step_20
-      name: "Async Performance Review"
-      file: "step_20.js"
-      description: "Review async command execution, Git process usage, and UI refresh flow"
+      name: 'Async Performance Review'
+      file: 'step_20.js'
+      description: 'Review async command execution, Git process usage, and UI refresh flow'
       phase: 2
       enabled: true
       can_parallelize: true
@@ -241,20 +287,20 @@ workflow:
       ai_persona: async_performance_engineer
 
     - id: step_22
-      name: "Accessibility Review"
-      file: "step_22.js"
-      description: "Accessibility review for web-facing components"
+      name: 'Accessibility Review'
+      file: 'step_22.js'
+      description: 'Accessibility review for web-facing components'
       phase: 2
       enabled: false
-      reason: "This repository is a terminal TUI, not an HTML/CSS web application."
+      reason: 'This repository is a terminal TUI, not an HTML/CSS web application.'
       can_parallelize: true
       dependencies: [step_13]
       ai_persona: accessibility_expert
 
     - id: step_23
-      name: "Performance Review"
-      file: "step_23.js"
-      description: "Review TUI responsiveness, synchronous Git calls, and repository browser performance"
+      name: 'Performance Review'
+      file: 'step_23.js'
+      description: 'Review TUI responsiveness, synchronous Git calls, and repository browser performance'
       phase: 2
       enabled: true
       can_parallelize: true
@@ -262,9 +308,9 @@ workflow:
       ai_persona: performance_engineer
 
     - id: step_11
-      name: "Context Analysis"
-      file: "step_11.js"
-      description: "Analyze project context, component boundaries, and Git-command-driven workflows"
+      name: 'Context Analysis'
+      file: 'step_11.js'
+      description: 'Analyze project context, component boundaries, and Git-command-driven workflows'
       phase: 2
       enabled: true
       can_parallelize: false
@@ -272,9 +318,9 @@ workflow:
       ai_persona: architecture_reviewer
 
     - id: step_16
-      name: "Version Update"
-      file: "step_16.js"
-      description: "Update package.json and CHANGELOG.md version references when needed"
+      name: 'Version Update'
+      file: 'step_16.js'
+      description: 'Update package.json and CHANGELOG.md version references when needed'
       phase: 2
       enabled: true
       can_parallelize: false
@@ -282,9 +328,9 @@ workflow:
       ai_persona: devops_engineer
 
     - id: step_17
-      name: "Workflow Summary"
-      file: "step_17.js"
-      description: "Generate workflow execution summary and metrics"
+      name: 'Workflow Summary'
+      file: 'step_17.js'
+      description: 'Generate workflow execution summary and metrics'
       phase: 2
       enabled: true
       can_parallelize: false
@@ -292,9 +338,9 @@ workflow:
       ai_persona: technical_writer
 
     - id: step_0f
-      name: "Commit Artifacts"
-      file: "step_0f.js"
-      description: "Commit workflow-generated documentation and artifacts"
+      name: 'Commit Artifacts'
+      file: 'step_0f.js'
+      description: 'Commit workflow-generated documentation and artifacts'
       phase: 3
       enabled: true
       can_parallelize: false
@@ -302,9 +348,9 @@ workflow:
       ai_persona: git_specialist
 
     - id: step_12
-      name: "Git Finalization"
-      file: "step_12.js"
-      description: "Stage, commit, and push final workflow changes using project Git conventions"
+      name: 'Git Finalization'
+      file: 'step_12.js'
+      description: 'Stage, commit, and push final workflow changes using project Git conventions'
       phase: 3
       enabled: true
       can_parallelize: false
@@ -315,21 +361,37 @@ validation:
   documentation:
     required: true
     min_coverage: 70
+  formatting:
+    required: true
   testing:
     required: true
 
 linting:
-  js_linter: "eslint"
-  js_config: "eslint.config.mjs"
-  js_glob: "{src,test}/**/*.{js,jsx,ts,tsx}"
-  md_linter: "markdownlint-cli2"
-  md_config: ".markdownlint-cli2.jsonc"
-  md_glob: "**/*.md"
+  js_linter: 'eslint'
+  js_config: 'eslint.config.mjs'
+  js_glob: '{src,test}/**/*.{js,jsx,ts,tsx}'
+  md_linter: 'markdownlint-cli2'
+  md_config: '.markdownlint-cli2.jsonc'
+  md_glob: '**/*.md'
   md_excludes:
-    - "node_modules/**"
-    - ".ai_workflow/**"
-    - "dist/**"
-    - "vendor/**"
+    - 'node_modules/**'
+    - '.ai_workflow/**'
+    - 'dist/**'
+    - 'vendor/**'
+
+formatting:
+  formatter: 'prettier'
+  format_command: 'npm run format'
+  check_command: 'npm run format:check'
+  config: '.prettierrc.json'
+  ignore: '.prettierignore'
+  glob: '**/*.{js,jsx,json,md,mjs,ts,tsx,yaml,yml}'
+  excludes:
+    - 'node_modules/**'
+    - '.ai_workflow/**'
+    - 'dist/**'
+    - 'vendor/**'
+    - 'package-lock.json'
 
 git:
   tag_on_run: false

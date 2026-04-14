@@ -1,10 +1,18 @@
+/**
+ * Main Ink application for browsing local repositories and running folder-scoped
+ * Git commands.
+ */
 import {execFile} from 'node:child_process';
 import {readdir} from 'node:fs/promises';
 import {basename, join} from 'node:path';
 import {Box, Text, useApp, useInput} from 'ink';
 import {useCallback, useEffect, useMemo, useState} from 'react';
 import {DirectoryTextBrowserWithStatusBar, StatusBar} from './pajussara-cdn.js';
-import type {DirectoryTextBrowserPane, StatusBarHint, TextListItem} from './pajussara-cdn.js';
+import type {
+	DirectoryTextBrowserPane,
+	StatusBarHint,
+	TextListItem
+} from './pajussara-cdn.js';
 
 const rootDirectory = '/home/mpb/Documents/GitHub';
 const primaryStatusBarHints = [
@@ -26,41 +34,83 @@ type GitLogOptionId = 'default' | 'oneline';
 type TextEntriesCache = Record<string, TextListItem[]>;
 type ExecGitError = Error & {stdout?: string; stderr?: string};
 
+/**
+ * Formats a Git command for status-bar feedback.
+ *
+ * @param args - Git arguments that will be shown to the user.
+ * @returns A human-readable command label.
+ */
 function formatGitCommandLabel(args: readonly string[]): string {
 	return `git ${args.join(' ')}`;
 }
 
+/**
+ * Normalizes exec output values to UTF-8 text.
+ *
+ * @param output - The value returned from the child-process callback.
+ * @returns The output converted to a string.
+ */
 function toUtf8Text(output: string | Buffer): string {
 	return typeof output === 'string' ? output : output.toString('utf8');
 }
 
+/**
+ * Reads a best-effort error message from an unknown thrown value.
+ *
+ * @param error - The thrown value.
+ * @param fallbackMessage - The message to use when no Error instance is available.
+ * @returns The extracted error message.
+ */
 function getErrorMessage(error: unknown, fallbackMessage: string): string {
 	return error instanceof Error ? error.message : fallbackMessage;
 }
 
+/**
+ * Preserves stdout and stderr on child-process failures so callers can surface
+ * Git-specific diagnostics.
+ *
+ * @param error - The original child-process error.
+ * @param stdout - Standard output captured from the command.
+ * @param stderr - Standard error captured from the command.
+ * @returns An Error enriched with command output.
+ */
 function createExecGitError(
 	error: unknown,
 	stdout: string | Buffer,
 	stderr: string | Buffer
 ): ExecGitError {
 	const execError: ExecGitError =
-		error instanceof Error ? error : new Error(getErrorMessage(error, 'Unknown git command error'));
+		error instanceof Error
+			? error
+			: new Error(getErrorMessage(error, 'Unknown git command error'));
 
 	execError.stdout = toUtf8Text(stdout);
 	execError.stderr = toUtf8Text(stderr);
 	return execError;
 }
 
+/**
+ * Executes a Git command inside the selected repository.
+ *
+ * @param args - Arguments passed to the git executable.
+ * @param cwd - Repository path used as the working directory.
+ * @returns The command stdout as UTF-8 text.
+ */
 function execGit(args: readonly string[], cwd: string): Promise<string> {
 	return new Promise((resolve, reject) => {
-		execFile('git', [...args], {cwd, encoding: 'utf8'}, (error, stdout, stderr) => {
-			if (error) {
-				reject(createExecGitError(error, stdout, stderr));
-				return;
-			}
+		execFile(
+			'git',
+			[...args],
+			{cwd, encoding: 'utf8'},
+			(error, stdout, stderr) => {
+				if (error) {
+					reject(createExecGitError(error, stdout, stderr));
+					return;
+				}
 
-			resolve(toUtf8Text(stdout));
-		});
+				resolve(toUtf8Text(stdout));
+			}
+		);
 	});
 }
 
@@ -82,12 +132,22 @@ const gitLogOptions = {
 	{id: GitLogOptionId; args: string[]; label: string; titleSuffix: string}
 >;
 
-function getGitLogOptionHints(selectedOptionId: GitLogOptionId): StatusBarHint[] {
+/**
+ * Builds the temporary status-bar hints used while choosing a git log mode.
+ *
+ * @param selectedOptionId - The currently highlighted log option.
+ * @returns The hints shown in the secondary status bar.
+ */
+function getGitLogOptionHints(
+	selectedOptionId: GitLogOptionId
+): StatusBarHint[] {
 	return [
 		{
 			key: '1',
 			label:
-				selectedOptionId === 'default' ? '> no command options' : 'no command options'
+				selectedOptionId === 'default'
+					? '> no command options'
+					: 'no command options'
 		},
 		{
 			key: '2',
@@ -98,6 +158,12 @@ function getGitLogOptionHints(selectedOptionId: GitLogOptionId): StatusBarHint[]
 	];
 }
 
+/**
+ * Lists direct child directories beneath the root repository browser path.
+ *
+ * @param directoryPath - Parent directory to inspect.
+ * @returns Sorted child directory paths.
+ */
 async function getChildDirectories(directoryPath: string): Promise<string[]> {
 	const entries = await readdir(directoryPath, {withFileTypes: true});
 
@@ -107,6 +173,12 @@ async function getChildDirectories(directoryPath: string): Promise<string[]> {
 		.sort((left, right) => left.localeCompare(right));
 }
 
+/**
+ * Maps git status output to the text-list status badges used by the TUI.
+ *
+ * @param line - A single line from `git status --short --branch`.
+ * @returns The UI status for the line.
+ */
 function getStatusFromLine(line: string): TextListItem['status'] {
 	if (line.startsWith('##')) {
 		return 'running';
@@ -123,6 +195,12 @@ function getStatusFromLine(line: string): TextListItem['status'] {
 	return 'done';
 }
 
+/**
+ * Extracts a user-facing Git error message, preferring stderr when available.
+ *
+ * @param error - The command failure value.
+ * @returns The most useful error text for the status bar or list.
+ */
 function getGitErrorMessage(error: unknown): string {
 	if (
 		typeof error === 'object' &&
@@ -139,13 +217,24 @@ function getGitErrorMessage(error: unknown): string {
 	return getErrorMessage(error, 'Unknown git command error');
 }
 
-async function getGitStatusEntries(directoryPath: string | null): Promise<TextListItem[]> {
+/**
+ * Converts `git status` output into list items for the right-hand pane.
+ *
+ * @param directoryPath - Selected repository path, if any.
+ * @returns Text items representing repository status or the relevant fallback.
+ */
+async function getGitStatusEntries(
+	directoryPath: string | null
+): Promise<TextListItem[]> {
 	if (!directoryPath) {
 		return [];
 	}
 
 	try {
-		const output = await execGit(['status', '--short', '--branch'], directoryPath);
+		const output = await execGit(
+			['status', '--short', '--branch'],
+			directoryPath
+		);
 		const lines = output
 			.split('\n')
 			.map((line) => line.trimEnd())
@@ -189,6 +278,12 @@ async function getGitStatusEntries(directoryPath: string | null): Promise<TextLi
 	}
 }
 
+/**
+ * Maps `git branch` lines to text-list badge states.
+ *
+ * @param line - A single line from `git branch`.
+ * @returns The UI status for that line.
+ */
 function getBranchStatusFromLine(line: string): TextListItem['status'] {
 	if (line.startsWith('*')) {
 		return 'running';
@@ -201,6 +296,12 @@ function getBranchStatusFromLine(line: string): TextListItem['status'] {
 	return 'done';
 }
 
+/**
+ * Maps `git diff` lines to text-list badge states.
+ *
+ * @param line - A single line from `git diff`.
+ * @returns The UI status for that line.
+ */
 function getDiffStatusFromLine(line: string): TextListItem['status'] {
 	if (
 		line.startsWith('diff --git') ||
@@ -226,7 +327,15 @@ function getDiffStatusFromLine(line: string): TextListItem['status'] {
 	return 'pending';
 }
 
-async function getGitDiffEntries(directoryPath: string | null): Promise<TextListItem[]> {
+/**
+ * Converts `git diff` output into list items for the right-hand pane.
+ *
+ * @param directoryPath - Selected repository path, if any.
+ * @returns Text items representing the diff or the relevant fallback.
+ */
+async function getGitDiffEntries(
+	directoryPath: string | null
+): Promise<TextListItem[]> {
 	if (!directoryPath) {
 		return [];
 	}
@@ -273,7 +382,15 @@ async function getGitDiffEntries(directoryPath: string | null): Promise<TextList
 	}
 }
 
-async function getGitBranchEntries(directoryPath: string | null): Promise<TextListItem[]> {
+/**
+ * Converts `git branch` output into list items for the right-hand pane.
+ *
+ * @param directoryPath - Selected repository path, if any.
+ * @returns Text items representing local branches or the relevant fallback.
+ */
+async function getGitBranchEntries(
+	directoryPath: string | null
+): Promise<TextListItem[]> {
 	if (!directoryPath) {
 		return [];
 	}
@@ -323,6 +440,12 @@ async function getGitBranchEntries(directoryPath: string | null): Promise<TextLi
 	}
 }
 
+/**
+ * Maps `git log` lines to text-list badge states.
+ *
+ * @param line - A single line from `git log`.
+ * @returns The UI status for that line.
+ */
 function getLogStatusFromLine(line: string): TextListItem['status'] {
 	if (line.startsWith('commit ')) {
 		return 'running';
@@ -339,6 +462,13 @@ function getLogStatusFromLine(line: string): TextListItem['status'] {
 	return 'done';
 }
 
+/**
+ * Converts `git log` output into list items for the right-hand pane.
+ *
+ * @param directoryPath - Selected repository path, if any.
+ * @param logArgs - Additional log-mode arguments such as `--oneline`.
+ * @returns Text items representing commit history or the relevant fallback.
+ */
 async function getGitLogEntries(
 	directoryPath: string | null,
 	logArgs: readonly string[] = []
@@ -389,6 +519,14 @@ async function getGitLogEntries(
 	}
 }
 
+/**
+ * Resolves the active text pane loader for the chosen Git view.
+ *
+ * @param textView - The current right-pane mode.
+ * @param directoryPath - Selected repository path, if any.
+ * @param logArgs - Extra log arguments used by log views.
+ * @returns The text items for the current pane.
+ */
 async function getTextEntriesForView(
 	textView: GitTextView,
 	directoryPath: string | null,
@@ -406,7 +544,17 @@ async function getTextEntriesForView(
 	}
 }
 
-function getTextLoadingLabel(textView: GitTextView, titleSuffix: string): string {
+/**
+ * Produces the temporary loading label shown while a pane refresh is in flight.
+ *
+ * @param textView - The current right-pane mode.
+ * @param titleSuffix - The active log-mode suffix, when applicable.
+ * @returns The loading message shown in the text pane.
+ */
+function getTextLoadingLabel(
+	textView: GitTextView,
+	titleSuffix: string
+): string {
 	switch (textView) {
 		case 'diff':
 			return 'Loading git diff...';
@@ -419,22 +567,63 @@ function getTextLoadingLabel(textView: GitTextView, titleSuffix: string): string
 	}
 }
 
+/**
+ * Internal helper exports used by the Jest suite to cover pure formatting,
+ * status-mapping, and Git-output transformation logic without rendering Ink.
+ */
+export const appTestUtils = {
+	formatGitCommandLabel,
+	toUtf8Text,
+	getErrorMessage,
+	createExecGitError,
+	getGitLogOptionHints,
+	getChildDirectories,
+	getStatusFromLine,
+	getGitErrorMessage,
+	getGitStatusEntries,
+	getBranchStatusFromLine,
+	getDiffStatusFromLine,
+	getGitDiffEntries,
+	getGitBranchEntries,
+	getLogStatusFromLine,
+	getGitLogEntries,
+	getTextEntriesForView,
+	getTextLoadingLabel
+} as const;
+
+/**
+ * Renders the gitx TUI and coordinates repository selection, cached text views,
+ * and long-running Git command feedback.
+ *
+ * @returns The Ink application tree.
+ */
 export function App() {
 	const {exit} = useApp();
-	const [selectedDirectoryPath, setSelectedDirectoryPath] = useState<string | null>(null);
-	const [selectedTextItemId, setSelectedTextItemId] = useState<string | null>(null);
+	const [selectedDirectoryPath, setSelectedDirectoryPath] = useState<
+		string | null
+	>(null);
+	const [selectedTextItemId, setSelectedTextItemId] = useState<string | null>(
+		null
+	);
 	const [activeTextView, setActiveTextView] = useState<GitTextView>('status');
-	const [focusedPane, setFocusedPane] = useState<DirectoryTextBrowserPane>('directories');
-	const [gitCommandStatus, setGitCommandStatus] = useState<GitCommandStatus>('idle');
+	const [focusedPane, setFocusedPane] =
+		useState<DirectoryTextBrowserPane>('directories');
+	const [gitCommandStatus, setGitCommandStatus] =
+		useState<GitCommandStatus>('idle');
 	const [gitCommandLabel, setGitCommandLabel] = useState<string | null>(null);
-	const [gitCommandErrorMessage, setGitCommandErrorMessage] = useState<string | null>(null);
+	const [gitCommandErrorMessage, setGitCommandErrorMessage] = useState<
+		string | null
+	>(null);
 	const [directoryRefreshVersion, setDirectoryRefreshVersion] = useState(0);
-	const [activeGitLogOptionId, setActiveGitLogOptionId] = useState<GitLogOptionId>('default');
+	const [activeGitLogOptionId, setActiveGitLogOptionId] =
+		useState<GitLogOptionId>('default');
 	const [selectedGitLogOptionId, setSelectedGitLogOptionId] =
 		useState<GitLogOptionId>('default');
 	const [isGitLogHintBarOpen, setIsGitLogHintBarOpen] = useState(false);
 	const [textItems, setTextItems] = useState<TextListItem[]>([]);
-	const [textEntriesCache, setTextEntriesCache] = useState<TextEntriesCache>({});
+	const [textEntriesCache, setTextEntriesCache] = useState<TextEntriesCache>(
+		{}
+	);
 	const browserWidth = Math.max(60, (process.stdout.columns ?? 100) - 4);
 	const browserHeight = Math.max(
 		10,
@@ -452,10 +641,17 @@ export function App() {
 						String(directoryRefreshVersion)
 					].join('::')
 				: null,
-		[activeGitLogOptionId, activeTextView, directoryRefreshVersion, selectedDirectoryPath]
+		[
+			activeGitLogOptionId,
+			activeTextView,
+			directoryRefreshVersion,
+			selectedDirectoryPath
+		]
 	);
 	const cachedTextItems =
-		textEntriesCacheKey === null ? undefined : textEntriesCache[textEntriesCacheKey];
+		textEntriesCacheKey === null
+			? undefined
+			: textEntriesCache[textEntriesCacheKey];
 	const textLoadingLabel = useMemo(
 		() => getTextLoadingLabel(activeTextView, activeGitLogOption.titleSuffix),
 		[activeGitLogOption.titleSuffix, activeTextView]
@@ -472,7 +668,8 @@ export function App() {
 
 				setGitCommandErrorMessage(null);
 				setSelectedDirectoryPath(
-					(currentDirectoryPath) => currentDirectoryPath ?? childDirectories[0] ?? null
+					(currentDirectoryPath) =>
+						currentDirectoryPath ?? childDirectories[0] ?? null
 				);
 			})
 			.catch((error) => {
@@ -510,19 +707,21 @@ export function App() {
 			}
 		]);
 
-		void getTextEntriesForView(activeTextView, selectedDirectoryPath, activeGitLogOption.args).then(
-			(nextTextItems) => {
-				if (isDisposed) {
-					return;
-				}
-
-				setTextEntriesCache((currentCache) => ({
-					...currentCache,
-					[textEntriesCacheKey]: nextTextItems
-				}));
-				setTextItems(nextTextItems);
+		void getTextEntriesForView(
+			activeTextView,
+			selectedDirectoryPath,
+			activeGitLogOption.args
+		).then((nextTextItems) => {
+			if (isDisposed) {
+				return;
 			}
-		);
+
+			setTextEntriesCache((currentCache) => ({
+				...currentCache,
+				[textEntriesCacheKey]: nextTextItems
+			}));
+			setTextItems(nextTextItems);
+		});
 
 		return () => {
 			isDisposed = true;
@@ -536,7 +735,8 @@ export function App() {
 		textLoadingLabel
 	]);
 
-	const selectedTextItem = textItems.find((item) => item.id === selectedTextItemId) ?? null;
+	const selectedTextItem =
+		textItems.find((item) => item.id === selectedTextItemId) ?? null;
 	const getSelectedTextIndex = useCallback(() => {
 		if (textItems.length === 0) {
 			return -1;
@@ -546,7 +746,9 @@ export function App() {
 			return 0;
 		}
 
-		const selectedIndex = textItems.findIndex((item) => item.id === selectedTextItemId);
+		const selectedIndex = textItems.findIndex(
+			(item) => item.id === selectedTextItemId
+		);
 		return selectedIndex >= 0 ? selectedIndex : 0;
 	}, [selectedTextItemId, textItems]);
 	const selectTextItemAtIndex = useCallback(
@@ -556,7 +758,10 @@ export function App() {
 				return;
 			}
 
-			const boundedIndex = Math.max(0, Math.min(nextIndex, textItems.length - 1));
+			const boundedIndex = Math.max(
+				0,
+				Math.min(nextIndex, textItems.length - 1)
+			);
 			setSelectedTextItemId(textItems[boundedIndex]?.id ?? null);
 		},
 		[textItems]
@@ -685,7 +890,7 @@ export function App() {
 				? 'git branch returned no lines for this folder.'
 				: activeTextView === 'log'
 					? `git log${activeGitLogOption.titleSuffix} returned no lines for this folder.`
-				: 'git status returned no lines for this folder.';
+					: 'git status returned no lines for this folder.';
 	const primaryCommandStatusBarHints = useMemo(() => {
 		if (!gitCommandLabel || gitCommandStatus === 'idle') {
 			return primaryStatusBarHints;
@@ -705,102 +910,137 @@ export function App() {
 		[selectedGitLogOptionId]
 	);
 
-	const handleInput = useCallback((input: string, key: {return?: boolean; escape?: boolean; leftArrow?: boolean; rightArrow?: boolean; upArrow?: boolean; downArrow?: boolean; pageDown?: boolean; pageUp?: boolean; home?: boolean; end?: boolean}) => {
-		if (isGitLogHintBarOpen) {
-			if (key.return) {
-				handleConfirmGitLogOption();
+	const handleInput = useCallback(
+		(
+			input: string,
+			key: {
+				return?: boolean;
+				escape?: boolean;
+				leftArrow?: boolean;
+				rightArrow?: boolean;
+				upArrow?: boolean;
+				downArrow?: boolean;
+				pageDown?: boolean;
+				pageUp?: boolean;
+				home?: boolean;
+				end?: boolean;
+			}
+		) => {
+			if (isGitLogHintBarOpen) {
+				if (key.return) {
+					handleConfirmGitLogOption();
+					return;
+				}
+
+				if (key.escape) {
+					handleCloseGitLogHintBar();
+					return;
+				}
+
+				if (input === '1') {
+					handleSelectGitLogOption('default');
+					return;
+				}
+
+				if (input === '2') {
+					handleSelectGitLogOption('oneline');
+					return;
+				}
+
+				if (key.leftArrow || key.upArrow || input === 'h' || input === 'k') {
+					handleSelectGitLogOption('default');
+					return;
+				}
+
+				if (key.rightArrow || key.downArrow || input === 'l' || input === 'j') {
+					handleSelectGitLogOption('oneline');
+					return;
+				}
+
 				return;
 			}
 
-			if (key.escape) {
-				handleCloseGitLogHintBar();
+			if (input === 'q' || key.escape) {
+				exit();
 				return;
 			}
 
-			if (input === '1') {
-				handleSelectGitLogOption('default');
+			if (input === 'p') {
+				void handleGitPull();
 				return;
 			}
 
-			if (input === '2') {
-				handleSelectGitLogOption('oneline');
+			if (input === 'r') {
+				void handleGitRefresh();
 				return;
 			}
 
-			if (key.leftArrow || key.upArrow || input === 'h' || input === 'k') {
-				handleSelectGitLogOption('default');
+			if (focusedPane === 'text') {
+				if (key.pageDown) {
+					moveTextSelection(textPageSize);
+					return;
+				}
+
+				if (key.pageUp) {
+					moveTextSelection(-textPageSize);
+					return;
+				}
+
+				if (key.home) {
+					selectTextItemAtIndex(0);
+					return;
+				}
+
+				if (key.end) {
+					selectTextItemAtIndex(textItems.length - 1);
+					return;
+				}
+			}
+
+			if (input === 'd') {
+				handleGitDiff();
 				return;
 			}
 
-			if (key.rightArrow || key.downArrow || input === 'l' || input === 'j') {
-				handleSelectGitLogOption('oneline');
+			if (input === 'b') {
+				handleGitBranch();
 				return;
 			}
 
-			return;
-		}
-
-		if (input === 'q' || key.escape) {
-			exit();
-			return;
-		}
-
-		if (input === 'p') {
-			void handleGitPull();
-			return;
-		}
-
-		if (input === 'r') {
-			void handleGitRefresh();
-			return;
-		}
-
-		if (focusedPane === 'text') {
-			if (key.pageDown) {
-				moveTextSelection(textPageSize);
+			if (input === 'l') {
+				handleGitLog();
 				return;
 			}
 
-			if (key.pageUp) {
-				moveTextSelection(-textPageSize);
+			if (input === 's') {
+				handleGitStatus();
 				return;
 			}
 
-			if (key.home) {
-				selectTextItemAtIndex(0);
-				return;
+			if (input === 'x') {
+				void handleGitPush();
 			}
-
-			if (key.end) {
-				selectTextItemAtIndex(textItems.length - 1);
-				return;
-			}
-		}
-
-		if (input === 'd') {
-			handleGitDiff();
-			return;
-		}
-
-		if (input === 'b') {
-			handleGitBranch();
-			return;
-		}
-
-		if (input === 'l') {
-			handleGitLog();
-			return;
-		}
-
-		if (input === 's') {
-			handleGitStatus();
-			return;
-		}
-
-		if (input === 'x') {
-			void handleGitPush();
-		}
-	}, [exit, focusedPane, handleCloseGitLogHintBar, handleConfirmGitLogOption, handleGitBranch, handleGitDiff, handleGitLog, handleGitPull, handleGitPush, handleGitRefresh, handleGitStatus, handleSelectGitLogOption, isGitLogHintBarOpen, moveTextSelection, selectTextItemAtIndex, textItems.length, textPageSize]);
+		},
+		[
+			exit,
+			focusedPane,
+			handleCloseGitLogHintBar,
+			handleConfirmGitLogOption,
+			handleGitBranch,
+			handleGitDiff,
+			handleGitLog,
+			handleGitPull,
+			handleGitPush,
+			handleGitRefresh,
+			handleGitStatus,
+			handleSelectGitLogOption,
+			isGitLogHintBarOpen,
+			moveTextSelection,
+			selectTextItemAtIndex,
+			textItems.length,
+			textPageSize
+		]
+	);
 
 	useInput(handleInput);
 
@@ -808,12 +1048,14 @@ export function App() {
 		<Box flexDirection="column" paddingX={1} paddingY={1} gap={1}>
 			<Text color="green">gitx</Text>
 			<Text dimColor>
-				DirectoryTextBrowserWithStatusBar rooted at /home/mpb/Documents/GitHub with live Git
-				status, diff, branch, and log output per selected folder.
+				DirectoryTextBrowserWithStatusBar rooted at /home/mpb/Documents/GitHub
+				with live Git status, diff, branch, and log output per selected folder.
 			</Text>
 			<Text>
 				Selected directory:{' '}
-				{selectedDirectoryPath ? basename(selectedDirectoryPath) : basename(rootDirectory)}
+				{selectedDirectoryPath
+					? basename(selectedDirectoryPath)
+					: basename(rootDirectory)}
 			</Text>
 			<Text dimColor>
 				Selected entry: {selectedTextItem ? selectedTextItem.text : 'None'}
@@ -842,7 +1084,11 @@ export function App() {
 				}}
 			/>
 			{isGitLogHintBarOpen ? (
-				<StatusBar hints={secondaryStatusBarHints} status="idle" width={browserWidth} />
+				<StatusBar
+					hints={secondaryStatusBarHints}
+					status="idle"
+					width={browserWidth}
+				/>
 			) : null}
 		</Box>
 	);

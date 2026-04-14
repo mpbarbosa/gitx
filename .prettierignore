@@ -1,0 +1,5 @@
+.ai_workflow/
+dist/
+node_modules/
+package-lock.json
+vendor/

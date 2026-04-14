@@ -10,7 +10,9 @@ const mockBasename = jest.fn();
 
 mockReaddir.mockResolvedValue([{isDirectory: () => true, name: 'repo1'}]);
 mockJoin.mockImplementation((...args: string[]) => args.join('/'));
-mockBasename.mockImplementation((targetPath: string) => targetPath.split('/').pop());
+mockBasename.mockImplementation((targetPath: string) =>
+	targetPath.split('/').pop()
+);
 mockExecFile.mockImplementation(
 	(
 		_cmd: string,
@@ -26,7 +28,11 @@ mockExecFile.mockImplementation(
 		}
 
 		if (gitSubcommand === 'diff') {
-			callback(null, 'diff --git a/file b/file\n@@ -1,2 +1,2 @@\n+added\n-removed\n', '');
+			callback(
+				null,
+				'diff --git a/file b/file\n@@ -1,2 +1,2 @@\n+added\n-removed\n',
+				''
+			);
 			return;
 		}
 
@@ -36,14 +42,22 @@ mockExecFile.mockImplementation(
 		}
 
 		if (gitSubcommand === 'log') {
-			callback(null, 'commit abc123\nAuthor: Test\nDate: Today\n\nInitial commit\n', '');
+			callback(
+				null,
+				'commit abc123\nAuthor: Test\nDate: Today\n\nInitial commit\n',
+				''
+			);
 			return;
 		}
 
 		callback(null, '', '');
 	}
 );
-type ExecFileCallback = (error: Error | null, stdout: string, stderr: string) => void;
+type ExecFileCallback = (
+	error: Error | null,
+	stdout: string,
+	stderr: string
+) => void;
 
 jest.unstable_mockModule('node:child_process', () => ({
 	execFileSync: mockExecFileSync,
@@ -87,7 +101,9 @@ jest.unstable_mockModule('../src/pajussara-cdn', () => ({
 			selectedDirectoryPath,
 			statusBarProps
 		}: {
-			getTextItems: (directoryPath: string | null) => Array<{id: string; text: string}>;
+			getTextItems: (
+				directoryPath: string | null
+			) => Array<{id: string; text: string}>;
 			textTitle: string;
 			selectedDirectoryPath: string | null;
 			statusBarProps: {
@@ -112,14 +128,18 @@ jest.unstable_mockModule('../src/pajussara-cdn', () => ({
 					{textItems.map((item) => (
 						<Text key={item.id}>{item.text}</Text>
 					))}
-					{statusBarProps.errorMessage ? <Text>{statusBarProps.errorMessage}</Text> : null}
+					{statusBarProps.errorMessage ? (
+						<Text>{statusBarProps.errorMessage}</Text>
+					) : null}
 				</>
 			);
 		}
 	),
 	StatusBar: jest.fn(
 		({hints}: {hints: Array<{key: string; label: string}>}) => (
-			<Text>{hints.map((hint) => `${hint.key}:${hint.label}`).join(' | ')}</Text>
+			<Text>
+				{hints.map((hint) => `${hint.key}:${hint.label}`).join(' | ')}
+			</Text>
 		)
 	)
 }));
@@ -144,7 +164,9 @@ describe('App', () => {
 
 		mockReaddir.mockResolvedValue([{isDirectory: () => true, name: 'repo1'}]);
 		mockJoin.mockImplementation((...args: string[]) => args.join('/'));
-		mockBasename.mockImplementation((targetPath: string) => targetPath.split('/').pop());
+		mockBasename.mockImplementation((targetPath: string) =>
+			targetPath.split('/').pop()
+		);
 		mockExecFile.mockImplementation(
 			(
 				_cmd: string,
@@ -160,7 +182,11 @@ describe('App', () => {
 				}
 
 				if (gitSubcommand === 'diff') {
-					callback(null, 'diff --git a/file b/file\n@@ -1,2 +1,2 @@\n+added\n-removed\n', '');
+					callback(
+						null,
+						'diff --git a/file b/file\n@@ -1,2 +1,2 @@\n+added\n-removed\n',
+						''
+					);
 					return;
 				}
 
@@ -170,7 +196,11 @@ describe('App', () => {
 				}
 
 				if (gitSubcommand === 'log') {
-					callback(null, 'commit abc123\nAuthor: Test\nDate: Today\n\nInitial commit\n', '');
+					callback(
+						null,
+						'commit abc123\nAuthor: Test\nDate: Today\n\nInitial commit\n',
+						''
+					);
 					return;
 				}
 
@@ -229,15 +259,24 @@ describe('App', () => {
 	});
 
 	it('shows a friendly message when the selected folder is not a git repository', async () => {
-		mockExecFile.mockImplementation((_cmd: string, args: string[], _options: unknown, callback: ExecFileCallback) => {
-			if (args[0] === 'status') {
-				const error = new Error('fatal: not a git repository') as Error & {stderr?: string};
-				callback(error, '', 'fatal: not a git repository');
-				return;
-			}
+		mockExecFile.mockImplementation(
+			(
+				_cmd: string,
+				args: string[],
+				_options: unknown,
+				callback: ExecFileCallback
+			) => {
+				if (args[0] === 'status') {
+					const error = new Error('fatal: not a git repository') as Error & {
+						stderr?: string;
+					};
+					callback(error, '', 'fatal: not a git repository');
+					return;
+				}
 
-			callback(null, '', '');
-		});
+				callback(null, '', '');
+			}
+		);
 
 		const {lastFrame} = await renderApp();
 
@@ -245,18 +284,27 @@ describe('App', () => {
 	});
 
 	it('shows a fallback error message for unknown git failures', async () => {
-		mockExecFile.mockImplementation((_cmd: string, args: string[], _options: unknown, callback: ExecFileCallback) => {
-			if (args[0] === 'status') {
-				callback(42 as unknown as Error, '', '');
-				return;
-			}
+		mockExecFile.mockImplementation(
+			(
+				_cmd: string,
+				args: string[],
+				_options: unknown,
+				callback: ExecFileCallback
+			) => {
+				if (args[0] === 'status') {
+					callback(42 as unknown as Error, '', '');
+					return;
+				}
 
-			callback(null, '', '');
-		});
+				callback(null, '', '');
+			}
+		);
 
 		const {lastFrame} = await renderApp();
 
-		expect(lastFrame()).toContain('git status failed: Unknown git command error');
+		expect(lastFrame()).toContain(
+			'git status failed: Unknown git command error'
+		);
 	});
 
 	it('surfaces directory loading failures in the status area', async () => {
@@ -264,7 +312,9 @@ describe('App', () => {
 
 		const {lastFrame} = await renderApp();
 
-		expect(lastFrame()).toContain('Failed to load directories: permission denied');
+		expect(lastFrame()).toContain(
+			'Failed to load directories: permission denied'
+		);
 	});
 
 	it('runs git fetch --prune when pressing r', async () => {
@@ -287,7 +337,12 @@ describe('App', () => {
 	it('shows command feedback while git fetch --prune is running and after it completes', async () => {
 		let completeCommand: ExecFileCallback | undefined;
 		mockExecFile.mockImplementation(
-			(_cmd: string, args: string[], _options: unknown, callback: ExecFileCallback) => {
+			(
+				_cmd: string,
+				args: string[],
+				_options: unknown,
+				callback: ExecFileCallback
+			) => {
 				if (args[0] === 'fetch') {
 					completeCommand = callback;
 					return;
@@ -328,5 +383,115 @@ describe('App', () => {
 
 		expect(instance.lastFrame()).toContain('Command status: idle');
 		expect(instance.lastFrame()).not.toContain('Done:git fetch --prune');
+	});
+
+	it('selects the oneline git log option and runs git log --oneline', async () => {
+		const instance = await renderApp();
+
+		instance.stdin.write('l');
+		await flushInput(2);
+		expect(instance.lastFrame()).toContain('2:--oneline');
+
+		instance.stdin.write('2');
+		await flushInput(2);
+		expect(instance.lastFrame()).toContain('2:> --oneline');
+
+		instance.stdin.write('\r');
+		await flushInput(4);
+
+		expect(instance.lastFrame()).toContain('GIT LOG --oneline');
+		expect(mockExecFile).toHaveBeenCalledWith(
+			'git',
+			['log', '--oneline'],
+			expect.objectContaining({
+				cwd: '/home/mpb/Documents/GitHub/repo1',
+				encoding: 'utf8'
+			}),
+			expect.any(Function)
+		);
+	});
+
+	it('supports vim-style navigation inside the git log option bar', async () => {
+		const instance = await renderApp();
+
+		instance.stdin.write('l');
+		await flushInput(2);
+
+		instance.stdin.write('j');
+		await flushInput(2);
+		expect(instance.lastFrame()).toContain('2:> --oneline');
+
+		instance.stdin.write('k');
+		await flushInput(2);
+		expect(instance.lastFrame()).toContain('1:> no command options');
+	});
+
+	it('runs git pull from keyboard input and surfaces command failures', async () => {
+		mockExecFile.mockImplementation(
+			(
+				_cmd: string,
+				args: string[],
+				_options: unknown,
+				callback: ExecFileCallback
+			) => {
+				if (args[0] === 'pull') {
+					const error = new Error('pull failed') as Error & {stderr?: string};
+					callback(error, '', 'fatal: pull failed');
+					return;
+				}
+
+				if (args[0] === 'status') {
+					callback(null, '## main\n?? file.txt\n M changed.js\n', '');
+					return;
+				}
+
+				callback(null, '', '');
+			}
+		);
+		const instance = await renderApp();
+
+		instance.stdin.write('p');
+		await flushInput(4);
+
+		expect(mockExecFile).toHaveBeenCalledWith(
+			'git',
+			['pull'],
+			expect.objectContaining({
+				cwd: '/home/mpb/Documents/GitHub/repo1',
+				encoding: 'utf8'
+			}),
+			expect.any(Function)
+		);
+		expect(instance.lastFrame()).toContain('Command status: error');
+		expect(instance.lastFrame()).toContain('fatal: pull failed');
+	});
+
+	it('runs git push from keyboard input', async () => {
+		const instance = await renderApp();
+
+		instance.stdin.write('x');
+		await flushInput(2);
+
+		expect(mockExecFile).toHaveBeenCalledWith(
+			'git',
+			['push'],
+			expect.objectContaining({
+				cwd: '/home/mpb/Documents/GitHub/repo1',
+				encoding: 'utf8'
+			}),
+			expect.any(Function)
+		);
+	});
+
+	it('returns to the status view with keyboard input', async () => {
+		const instance = await renderApp();
+
+		instance.stdin.write('d');
+		await flushInput(4);
+		expect(instance.lastFrame()).toContain('GIT DIFF');
+
+		instance.stdin.write('s');
+		await flushInput(4);
+		expect(instance.lastFrame()).toContain('GIT STATUS');
 	});
 });

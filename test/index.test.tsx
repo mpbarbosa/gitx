@@ -29,7 +29,9 @@ describe('index.tsx', () => {
 
 		expect(renderMock).toHaveBeenCalledTimes(1);
 		const callArg = renderMock.mock.calls[0]?.[0];
-		expect(callArg?.type?.name || callArg?.type?.displayName || callArg?.type).toBe('App');
+		expect(
+			callArg?.type?.name || callArg?.type?.displayName || callArg?.type
+		).toBe('App');
 	});
 
 	it('does not throw while rendering App', async () => {

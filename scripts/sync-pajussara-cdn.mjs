@@ -1,3 +1,6 @@
+/**
+ * Synchronizes the pinned pajussara_tui_comp CDN build into the local vendor mirror.
+ */
 import {mkdir, writeFile} from 'node:fs/promises';
 import {dirname, resolve} from 'node:path';
 
@@ -27,11 +30,19 @@ const mirroredFiles = [
 	'dist/helpers/index.js'
 ];
 
+/**
+ * Downloads one generated upstream file into the local vendor mirror.
+ *
+ * @param relativePath - CDN-relative path to mirror under vendor/pajussara_tui_comp.
+ * @returns A promise that resolves after the file is written.
+ */
 async function syncFile(relativePath) {
 	const response = await fetch(`${pajussaraBaseUrl}/${relativePath}`);
 
 	if (!response.ok) {
-		throw new Error(`Unable to download ${relativePath}: ${response.status} ${response.statusText}`);
+		throw new Error(
+			`Unable to download ${relativePath}: ${response.status} ${response.statusText}`
+		);
 	}
 
 	const targetPath = resolve('vendor/pajussara_tui_comp', relativePath);
