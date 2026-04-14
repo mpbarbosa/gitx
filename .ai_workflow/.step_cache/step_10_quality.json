@@ -19,7 +19,7 @@
     "scripts/sync-pajussara-cdn.mjs": {
       "score": 100,
       "issueCount": 0,
-      "lastAnalyzed": "2026-04-14T00:07:16.597Z"
+      "lastAnalyzed": "2026-04-14T01:35:40.783Z"
     },
     "package-lock.json": {
       "score": 100,
@@ -29,7 +29,7 @@
     "jest.config.mjs": {
       "score": 100,
       "issueCount": 0,
-      "lastAnalyzed": "2026-04-14T00:07:16.597Z"
+      "lastAnalyzed": "2026-04-14T01:35:40.783Z"
     },
     "package.json": {
       "score": 100,
@@ -50,6 +50,11 @@
       "score": 100,
       "issueCount": 0,
       "lastAnalyzed": "2026-04-14T00:07:16.597Z"
+    },
+    "scripts/check-lockfile-sync.mjs": {
+      "score": 100,
+      "issueCount": 0,
+      "lastAnalyzed": "2026-04-14T01:35:40.783Z"
     }
   }
 }

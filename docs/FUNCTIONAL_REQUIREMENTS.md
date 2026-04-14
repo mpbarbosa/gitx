@@ -4,7 +4,7 @@
 
 `gitx` provides an Ink-based terminal UI for browsing local repositories and inspecting Git state without leaving the terminal.
 
-**Current version:** 1.3.3
+**Current version:** 1.3.4
 
 ## Functional Scope
 
@@ -44,6 +44,7 @@
 - The codebase must remain compatible with Node.js ESM and TypeScript `NodeNext`.
 - Generated vendor files must be refreshed through `npm run sync:pajussara`, not hand-edited.
 - Application-specific behavior must remain in `src/`.
+- Repository formatting must run through Prettier via `npm run format` and `npm run format:check`.
 - JavaScript/TypeScript and Markdown linting must run through `npm run lint`.
 - The committed test suite under `test/` must run through `npm test`.
 - The project must continue to build with `npm run build` and type-check with `npm run typecheck`.
@@ -53,13 +54,13 @@
 > Populated by the `fix-log-issues` skill. Each item was verified against the
 > live codebase before being marked done.
 
-| ID | Source step | Description | File / Path | Priority | Status |
-| -- | ----------- | ----------- | ----------- | -------- | ------ |
-| RI-001 | step_05 | Documented the `.github` directory in the main project docs. | README.md | Low | done |
-| RI-002 | step_13 | Removed the markdown list-indentation violation in the requirements doc. | FUNCTIONAL_REQUIREMENTS.md | Low | done |
-| RI-003 | step_02 | Updated stale documentation that claimed the repo had no committed test suite. | README.md, ARCHITECTURE.md, FUNCTIONAL_REQUIREMENTS.md, .github/copilot-instructions.md | Medium | done |
-| RI-004 | step_02 | Refreshed `.workflow-config.yaml` so workflow metadata, docs roots, and test execution settings match the live repository. | .workflow-config.yaml | Medium | done |
-| RI-005 | step_20 | Added explicit top-level failure handling to the pajussara CDN sync script. | scripts/sync-pajussara-cdn.mjs | Medium | done |
-| RI-006 | step_05 | Removed stale workflow metadata that pointed at a nonexistent `docs/` root and `FLOWCHART.md`. | .workflow-config.yaml, FUNCTIONAL_REQUIREMENTS.md | Medium | done |
-| RI-007 | step_10 | Surfaced root directory loading failures in the UI status area instead of silently returning an empty directory list. | src/app.tsx, test/app.test.tsx | Medium | done |
-| RI-008 | step_19 | Replaced the unsafe exec callback type assertion with a typed error normalizer that preserves fallback messages when stderr is empty. | src/app.tsx | Medium | done |
+| ID     | Source step | Description                                                                                                                           | File / Path                                                                             | Priority | Status |
+| ------ | ----------- | ------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- | -------- | ------ |
+| RI-001 | step_05     | Documented the `.github` directory in the main project docs.                                                                          | README.md                                                                               | Low      | done   |
+| RI-002 | step_13     | Removed the markdown list-indentation violation in the requirements doc.                                                              | FUNCTIONAL_REQUIREMENTS.md                                                              | Low      | done   |
+| RI-003 | step_02     | Updated stale documentation that claimed the repo had no committed test suite.                                                        | README.md, ARCHITECTURE.md, FUNCTIONAL_REQUIREMENTS.md, .github/copilot-instructions.md | Medium   | done   |
+| RI-004 | step_02     | Refreshed `.workflow-config.yaml` so workflow metadata, docs roots, and test execution settings match the live repository.            | .workflow-config.yaml                                                                   | Medium   | done   |
+| RI-005 | step_20     | Added explicit top-level failure handling to the pajussara CDN sync script.                                                           | scripts/sync-pajussara-cdn.mjs                                                          | Medium   | done   |
+| RI-006 | step_05     | Removed stale workflow metadata that pointed at a nonexistent `docs/` root and `FLOWCHART.md`.                                        | .workflow-config.yaml, FUNCTIONAL_REQUIREMENTS.md                                       | Medium   | done   |
+| RI-007 | step_10     | Surfaced root directory loading failures in the UI status area instead of silently returning an empty directory list.                 | src/app.tsx, test/app.test.tsx                                                          | Medium   | done   |
+| RI-008 | step_19     | Replaced the unsafe exec callback type assertion with a typed error normalizer that preserves fallback messages when stderr is empty. | src/app.tsx                                                                             | Medium   | done   |
